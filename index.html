@@ -137,7 +137,7 @@
       <button class="btn ghost hidden" id="continueBtn">续写前尘</button>
       <button class="btn ghost" data-open="archive">江湖图鉴</button>
     </div>
-    <div class="continue-note">江湖纪元 V4 · 九线各二十幕 · 无需登录 · 自动存档</div>
+    <div class="continue-note">江湖纪元 V6 · 五条长篇各二十四幕 · 双副本 · 无需登录</div>
   </section>
 
   <section class="screen creator hidden" id="creator">
@@ -204,6 +204,7 @@
       <button class="nav-btn" data-open="equipment"><i>甲</i>装备</button>
       <button class="nav-btn" data-open="skills"><i>武</i>武学</button>
       <button class="nav-btn" data-open="quests"><i>卷</i>任务</button>
+      <button class="nav-btn" data-open="dungeons"><i>阵</i>副本</button>
       <button class="nav-btn" data-open="relations"><i>缘</i>关系</button>
       <button class="nav-btn" data-open="fort"><i>庐</i>福地</button>
       <button class="nav-btn" data-open="achievements"><i>印</i>成就</button>
@@ -223,7 +224,7 @@
 (() => {
 "use strict";
 const SAVE_KEY="bianheNight.auto.v1", META_KEY="bianheNight.meta.v1", SLOT_PREFIX="bianheNight.slot.";
-const VERSION=4, REALMS=["初窥门径","略有小成","融会贯通","炉火纯青","登峰造极","返璞归真","天人合一"];
+const VERSION=6, REALMS=["初窥门径","略有小成","融会贯通","炉火纯青","登峰造极","返璞归真","天人合一"];
 const SLOTS=["武器","头部","上衣","护腕","腰带","鞋履","项链","戒指","护符"];
 const QUALITIES=["凡品","良品","上品","珍品","绝品","百炼","神兵"];
 const STATUS_NAMES={poison:"中毒",bleed:"流血",stun:"眩晕",root:"定身",armorBreak:"破甲",weak:"虚弱",burn:"灼烧",cold:"寒冷",shield:"护盾",regen:"回春",hidden:"隐匿",berserk:"狂暴"};
@@ -358,7 +359,7 @@ const SCHOOL_BRANCHES={
   hongyin:["慈航：治疗守护","破妄：音律镇敌"],chaoguang:["明辉：护盾回光","幽影：会心追击"],
   longyin:["归元：剑意疗愈","惊雷：破防爆发"]
 };
-const SKILL_LEVELS=[1,1,4,6,8,11,15,20];
+const SKILL_LEVELS=[1,3,6,10,15,21,28,36];
 Object.entries(SCHOOLS).forEach(([id,school])=>{
   const extra=ADVANCED_SKILLS[id];
   school.skills=[...school.skills,...extra].map((raw,index)=>({
@@ -1353,6 +1354,315 @@ STORY.route_clue_table={chapter:"序章 · 九事同夜",place:"州桥废灯摊"
   {label:"让黑玉显出十七年前的第一幕",next:"route_truth_0",effects:{routeSeed:"truth",tendency:{truth:1},relation:{linQue:{favor:2,trust:2}}}}
 ]};
 
+/* V6 长篇重制：五条普通主线互相隔离，每条二十四幕、双副本、三阶段终战。 */
+const NORMAL_ROUTE_IDS=["law","border","trade","martial","message"];
+Object.assign(NPCS,{
+  yanQiniang:{name:"燕七娘",identity:"御街说书人与前皇城司暗桩",personality:"利落、爱笑、不肯欠情",goal:"救出被旧案牵连的弟弟",secret:"她曾替周千户烧掉一份真卷",stance:"汴京游侠",quest:"七娘不说第七回",fates:["在州桥开一间只讲真案的茶楼","替你顶罪后消失于江南"]},
+  guanShanhe:{name:"关山鹤",identity:"快刀捕头与通缉犯",personality:"寡言、暴烈、是非分明",goal:"亲手斩断自己误杀证人的旧债",secret:"他追捕的囚车里坐着唯一活证",stance:"大理寺旧部",quest:"快刀慢一步",fates:["重披捕衣巡夜","斩完旧债后远走关外"]},
+  xiaoman:{name:"小满",identity:"边村驿女与斥候",personality:"爽朗、耐寒、记路极准",goal:"让雪线两边的孩子都能赶集",secret:"她替阿勒迟送过三次停战口信",stance:"边民",quest:"雪上三封信",fates:["成为第一名双边女驿使","留在空城守最后一盏灯"]},
+  hanzhong:{name:"韩钟",identity:"黑鬃马场老把式",personality:"粗声、细心、惜马胜人",goal:"夺回被军需官卖掉的战马",secret:"天策的断枪一直藏在他的马槽下",stance:"边军",quest:"黑鬃夜嘶",fates:["带马群归边军","纵马入草原再无音讯"]},
+  mengCanglang:{name:"孟沧浪",identity:"镜湖水匪大首领",personality:"豪横、护短、恨官契",goal:"把十二水寨拧成一股绳",secret:"他收沈万筹银子劫过赈灾船",stance:"水寨",quest:"沧浪不回头",fates:["改水寨为义渡","抱着沉金账簿沉湖"]},
+  luQinghe:{name:"陆青禾",identity:"湖市女掌柜与船工头领",personality:"沉稳、精细、敢担亏损",goal:"让船工也能拥有商路份额",secret:"她私藏着第一份金鳞契母本",stance:"湖商",quest:"青禾一夜市",fates:["主持万舟议会","烧契后开一间小饭铺"]},
+  qiuMingxiu:{name:"裘明岫",identity:"青崖论剑宿敌",personality:"骄傲、坦荡、好胜不欺弱",goal:"堂堂正正赢你一次",secret:"幼时被柳停云买作门派人质",stance:"对立门派",quest:"剑下第二名",fates:["与你并辔浪迹江湖","接掌青崖后成为严厉盟主"]},
+  heSan:{name:"何三",identity:"知北游断旗岭驿卒",personality:"话多、胆小、关键时不退",goal:"把最后一封家书送到",secret:"他就是传闻中的偷蛋奇侠之一",stance:"知北游",quest:"怀里那枚蛋",fates:["成为十二驿总管","抱着灵兽蛋在火里失踪"]}
+});
+
+Object.assign(DUNGEONS,{
+  fengleWarehouse:{name:"丰乐仓火夜",rec:"Lv.6 · 初窥门径",desc:"被封的官仓同时藏着囚犯、假押银和会自燃的红木匣。三条潜入路线会保住不同证据。",enemy:"courtShadow",routeId:"law",routeGear:ROUTE_STAGE_GEAR.law,routes:[
+    {id:"roof",name:"乌瓦潜行",desc:"从巡灯死角落入账阁。",env:"雨瓦、吊灯与绳桥"},{id:"canal",name:"漕沟入仓",desc:"沿水门救出苦役。",env:"暗渠、木栅与水轮"},{id:"cart",name:"假押银车",desc:"扮作转运官当面套话。",env:"官符、秤台与火油"}],drops:["汴梁夜巡套装","巡夜墨牌","武学残页"],achievement:"仓火留卷"},
+  blackManeRanch:{name:"黑鬃马场",rec:"Lv.10 · 略有小成",desc:"战马受惊、饲料下毒与朔庭偷马只是表象，真正的账在马掌铁里。",enemy:"tianCe",routeId:"border",routeGear:ROUTE_STAGE_GEAR.border,routes:[
+    {id:"herd",name:"随群夜奔",desc:"从马群骚动追出毒源。",env:"奔马、雪沟与套索"},{id:"stable",name:"潜入马厩",desc:"查换过的马掌和军印。",env:"草垛、暗槽与油灯"},{id:"bet",name:"应天策赌局",desc:"用一场赌命换马场开门。",env:"断枪、木栏与饥民碑"}],drops:["雁门烽雪套装","黑鬃缰绳","马掌密账"],achievement:"万马归营"},
+  dragonKingShip:{name:"龙王船",rec:"Lv.13 · 融会贯通",desc:"水寨旗舰每过一舱便换一次旗号，旧部、被掳船工与沈家暗桩混在同一条船上。",enemy:"goldenContract",routeId:"trade",routeGear:ROUTE_STAGE_GEAR.trade,routes:[
+    {id:"keel",name:"贴龙骨潜入",desc:"借夜潮攀上底舱。",env:"暗流、铜钉与压舱石"},{id:"banquet",name:"赴龙王宴",desc:"以商契和酒令进主舱。",env:"酒桌、旗语与伏弩"},{id:"mutiny",name:"联络船工",desc:"从下层发动夺船。",env:"绞盘、货网与火帆"}],drops:["镜湖潮痕套装","龙骨钩","分契银算盘"],achievement:"龙王换旗"},
+  brokenSwordValley:{name:"断剑谷",rec:"Lv.12 · 融会贯通",desc:"谷中每柄断剑都留着败者最后一招；抄招会变强，也会逐渐忘记为何出剑。",enemy:"sameMove",routeId:"martial",routeGear:ROUTE_STAGE_GEAR.martial,routes:[
+    {id:"duel",name:"逐剑问招",desc:"一柄一柄接下旧招。",env:"剑冢、风穴与石碑"},{id:"rescue",name:"寻失踪弟子",desc:"绕过剑阵救人。",env:"藤桥、落石与药泉"},{id:"empty",name:"无招入谷",desc:"放下兵刃观察招意。",env:"回声、残谱与空鞘"}],drops:["青崖问心套装","断剑心铁","第十二帖"],achievement:"断剑不断义"},
+  blackWindFort:{name:"黑风寨",rec:"Lv.8 · 略有小成",desc:"寨门贴着十七张悬赏，抢信的山贼、逃兵和饥民各有一半真话。",enemy:"roadBandits",routeId:"message",routeGear:ROUTE_STAGE_GEAR.message,routes:[
+    {id:"cliff",name:"攀后崖",desc:"越岗哨直取信库。",env:"飞索、鹰巢与碎石"},{id:"caravan",name:"扮商队",desc:"用假货单走正门。",env:"关卡、酒棚与暗号"},{id:"challenge",name:"擂台夺旗",desc:"按寨规赢取问话权。",env:"木台、锣鼓与人质"}],drops:["知北游驿路套装","断旗木牌","密封火漆"],achievement:"黑风送信"}
+});
+
+const V6_ROUTE_META={
+  law:{name:"汴京风雷",partner:"燕七娘",npc:"yanQiniang",boss:"courtShadow",dungeons:["fengleWarehouse","blankArchive"],endings:["御街留名","双侠夜奔","汴京巡夜使","汴京第一通缉犯","茶楼风月"]},
+  border:{name:"雁门孤骑",partner:"萧砚真",npc:"xiaoYanzhen",boss:"grainEnvoy",dungeons:["blackManeRanch","yanmenFort"],endings:["雁门飞将","雪线和盟","孤骑出关","空城护民","血旗镇关"]},
+  trade:{name:"镜湖惊涛",partner:"唐云栖",npc:"tangYun",boss:"goldenContract",dungeons:["mirrorLake","dragonKingShip"],endings:["镜湖盟主","万舟通商","青旗义渡","沧浪远航","水上双侠"]},
+  martial:{name:"青崖论剑",partner:"裘明岫",npc:"qiuMingxiu",boss:"sameMove",dungeons:["brokenSwordValley","qingyaTrial"],endings:["一代宗师","青崖盟主","无门大侠","与宿敌浪迹江湖","武尽归凡"]},
+  message:{name:"知北游万里",partner:"林鹊",npc:"linQue",boss:"stationFire",dungeons:["blackWindFort","twelveStations"],endings:["知北游主","天下第一信使","三封假信定江湖","万里说书人","群侠同路"]}
+};
+Object.assign(ENEMIES.courtShadow,{phase3:{name:"周千户·风雷断街",hp:185,attack:34,defense:9,moves:["百灯火油","刑台封锁","同案皆斩"],hint:"第三阶段必须同时保住证人、百姓退路与一份公开卷宗；伙伴信任会转化为援护。"}});
+Object.assign(ENEMIES.grainEnvoy,{phase3:{name:"王景策·雪线焚粮",hp:195,attack:36,defense:10,moves:["饥兵哗变","粮车堵门","血旗借名"],hint:"公开两国黑市分账可动摇饥兵；只斩主将不能解除粮车阵。"}});
+Object.assign(ENEMIES.goldenContract,{phase3:{name:"沈万筹·沉金绝契",hp:205,attack:37,defense:10,moves:["凿船沉账","契主换位","金雨封舱"],hint:"湖水正在上涨。辨清工钱账、债契与军械账，比单纯造成伤害更重要。"}});
+Object.assign(ENEMIES.sameMove,{phase3:{name:"天下同招·无胜之胜",hp:215,attack:39,defense:11,moves:["绝学复制","删去收势","夺取师承"],hint:"它无法理解治疗敌人、保护旁人、拆除擂台或主动退步。使用不同类型行动制造破绽。"}});
+Object.assign(ENEMIES.stationFire,{phase3:{name:"江听渡·万里一声",hp:190,attack:35,defense:9,moves:["十二驿齐鸣","删改落款","迟到的真话"],hint:"不要寻找一封万能真信。保留多个来源并让伙伴各自作证，可使总钟失去控制。"}});
+Object.entries(V6_ROUTE_META).forEach(([id,m])=>{
+  ROUTES[id].name=m.name;ROUTES[id].endings=m.endings.map((name,i)=>({name,title:name,desc:`你在「${m.name}」留下了属于第${i+1}种抉择的江湖后话。同行者、百姓与敌手都记得你怎样走到这里。`,hint:"同一条长线仍有未走过的伙伴命运与副本路线。"}));
+  ROUTES[id].rumors=[`${m.name}的第一封急报已经送到州桥。`,`${m.partner}等了你一夜，局势仍在恶化。`,`若再无人接手，${m.name}将永久失去一条支线。`];
+});
+
+const V6_BEATS={
+law:[
+["囚车过州桥","汴京·州桥","清晨的州桥刚摆开鱼摊，一辆没有官旗的囚车便撞翻蒸饼摊。车中书生满手血，隔窗喊出林鹊父亲的名字；押车军士却拿着大理寺昨夜才作废的关防。顾临川命你别动，燕七娘已经把茶碗扣在刀柄上。"],
+["长街夺车","御街南口","囚车忽然加速，三名假差役从人群里拔刀。你与燕七娘踏过伞面追车，顾临川带真差役封住街尾。卖花童被惊马逼到墙角，而车夫正要把囚车驶进皇城司的巷口。"],
+["快刀关山鹤","鱼行后巷","关山鹤用一柄缺口快刀横在巷中。他认定囚犯害死旧日证人，先向你要人，再向顾临川要一份盖过官印的承诺。燕七娘认出他刀鞘里藏着半张烧焦供状，却没有当场说破。"],
+["一盏灯卷宗","大理寺旧卷库","夜里只准点一盏灯。顾临川翻出十七年前的转押名册，你负责在虫蛀纸页里拼回缺字。名册证明囚车书生当年只是抄手，真正签押的人叫周千户；可同页末端，又有燕七娘的暗桩花押。"],
+["燕七娘的条件","州桥茶棚","燕七娘把伞斜靠在桌边，承认自己替周千户递过一只红木匣。她肯带你进丰乐仓，条件是先救被关在仓里的弟弟，哪怕会让主犯趁乱逃走。顾临川反对交换，你必须当着两人的面表态。"],
+["丰乐仓火夜","丰乐官仓","仓门后不是金银，而是成排假押银箱与被迫改账的苦役。屋顶有人泼火油，地下漕沟又传来求救。燕七娘冲向囚室，顾临川守住账台；你选择的潜入路线将决定谁能在火起前会合。"],
+["红木匣","丰乐仓后院","火被压下后，红木匣却自己响了三声。匣中没有秘宝，只有十三枚不同官署的旧印和一张御街刑场图。关山鹤赶来砍开暗格，发现周千户准备借一次公开处刑灭掉所有见证人。"],
+["楼外楼饮酒","汴河·楼外楼","四人第一次同桌。燕七娘只喝半盏，顾临川把官帽放到身后，关山鹤沉默地磨刀。酒过三巡，燕七娘问你：若她真是当年的帮凶，你会先抓她，还是先陪她把弟弟救回来？"],
+["假押银官","南薰门税栈","你们扮作押银官出城。柠檬茶少甜坐在税栈卖冷茶，一口说出每只银箱里装的都是石头。守门校尉索要暗号，远处已有皇城司骑兵折返，假身份只能保住其中一车。"],
+["夜闯皇城司别院","皇城司西别院","别院表面空置，井下却关着十余名被抹去身份的证人。你与燕七娘沿屋檐拆哨，顾临川在正门拖延搜查令。最后一道铁门需要钥匙、火药或有人留下挡住追兵。"],
+["关山鹤旧债","旧刑棚","获救老妪认出关山鹤：十年前正是他误杀了她的儿子。关山鹤把刀递给她，跪在积水里不辩解。此刻追兵将至，你可以劝老妪先走、替关山鹤担保，或允许这笔债当场了结。"],
+["假信误会","相国寺雨廊","一封盖着你私印的信落到燕七娘手中，信上写着要以她换顾临川升官。她没有质问，只带弟弟消失。顾临川发现纸筋出自大理寺，意味着内鬼熟悉你们全部约定；可你若先追内鬼，燕七娘会越走越远。"],
+["地下水门","汴河旧闸","林鹊从排水渠找到燕七娘留下的伞骨记号。旧水门一边通皇城司地牢，一边通城外义渡。潮水正涨，周千户的人又在闸上布弩。你必须选一条路先打开，另一条会被水淹。"],
+["水门暗牢","汴京地下水门","闸室七层，越往下水越深。囚犯的锁链连着水轮，扯断会让整座暗牢下沉；机关图则藏在守闸人的腰牌背面。救人、夺图、追燕七娘三件事在同一刻发生。"],
+["生死托付","城南义庄","误会解开后，燕七娘没有道歉，也没要求你道歉。她把弟弟和那枚暗桩花押一并托给你，自己要去做刑场内应。她说：“若我回不来，别替我讲成女侠，照实说我怕得要命。”"],
+["州桥群侠会","州桥夜市","顾临川召来讼师、漕工、旧捕快与茶摊百姓。有人要劫刑场，有人主张先把证据送入宫中，也有人怕连累全街。你需要分配人手、保住退路，并决定是否让关山鹤担任最危险的前锋。"],
+["汴河百灯","汴河两岸","行刑前夜，燕七娘让百姓各点一盏写着证词来源的河灯。皇城司立刻派船收灯，百舟在雨中穿梭。你们不能把灯全保住，却能让证词分散到足够多人手里。"],
+["百舟追逐","汴河主河道","周千户带官船撞入灯阵，弩箭像暴雨压下。你跃过货船、画舫和渔舟追向旗舰，燕七娘在另一侧救落水证人。若回头救她，周千户会先到刑场；若继续追，她要独自扛过三艘快船。"],
+["关山鹤最后一刀","州桥刑台","关山鹤终于追上当年伪造口供的副使。那人跪地愿当庭作证，条件是免死。关山鹤的刀已举到最高处；老妪也站在人群中。你的一句话会决定这把刀用于复仇、护证还是斩断刑台锁链。"],
+["刑场风雷","御街刑场","周千户先以官印封街，再点燃藏在百灯中的火油，最后亲自披甲下场。他要证明没有官署许可的真相只是一场暴乱。你们先破封街阵，再护住百姓，最终才有资格与他在雨幕里决胜。"],
+["刑场无刑","御街破晓","刽子手放下刀，囚犯从木笼走出。顾临川手里有足以升官的卷宗，也有足以辞官的证据；燕七娘靠着刑柱笑，说茶棚欠的桌钱还没结。汴京人等你决定下一步如何收拾这场胜利。"],
+["茶楼三月","州桥新茶楼","三个月后，州桥多了一家不挂招牌的茶楼。顾临川偶尔穿便衣来听案，关山鹤负责把闹事者丢出去，燕七娘则把你最狼狈的一段说得满堂大笑。门外又来一封没有署名的案卷。"],
+["风雷余账","汴京诸坊","胜利并未让旧制度一夜消失。获救证人要新身份，受牵连差役要饭吃，皇城司残部也在寻仇。你用三日走遍十三坊，决定由官署、民间讼馆或你自己的刀来守住余下的人。"],
+["汴京后话","州桥晨市","晨市重新喧闹，鱼贩仍为两文钱吵架。燕七娘把五张写着不同去处的纸压在茶碗下：留名、夜奔、巡夜、通缉，或与她守一间茶楼。小选择早已累积成各不相同的未来。"]
+],
+border:[
+["护粮出关","雁门粮营","萧砚真把三百辆粮车交给你，军令只写“务必送达”，没写沿路十七个断炊村庄。小满牵来两匹耐寒马，提醒黑石峡有马匪，也有一支失联边军。第一袋粮该留给谁，决定队伍如何看你。"],
+["黑石峡伏骑","黑石峡","乱箭从两侧崖壁落下，绊马索已拖倒头车。袭击者穿朔庭皮甲，喊的却是本朝军号。你能追上领头骑、先救压在车下的民夫，或放火烧断峡口逼伏骑现身。"],
+["雪原追骑","雁门雪原","你与萧砚真并骑追出三十里。敌骑故意沿冻河走，显然熟悉边军巡线；小满却在雪里找到粮仓专用的红麻绳。天色将黑，继续追可能失去粮队，回头则放走唯一活口。"],
+["边村热粥","石瓮村","村里只剩老人和孩子。小满用一把碎米煮出半锅粥，萧砚真默默从军粮里再添一瓢。就在众人端碗时，村外插下一面断旗：天策要与你赌第七局，赌注是粮道与一条命。"],
+["天策第七局","饥民碑前","天策把断枪横在膝上，说赢者带走马场钥匙，输者替对方办一件送死的差事。他并非真想杀你，而是在试你会不会为军令牺牲沿途饥民。你可应战、改赌护粮，或查他枪上七道刻痕。"],
+["黑鬃马场","黑鬃坡","夜半万马惊嘶，毒草被掺进饲料。韩钟守着主厩不许任何军官靠近，天策则认定账房地下藏着卖马名册。你要在奔马、火厩与朔庭偷骑之间抢出一条真路。"],
+["军中饮酒","定北军营","粮车抵营，萧砚真破例开了一坛边酒。她讲起父亲那道弃城令，只说前半句：城可失，人不可乱。酒桌另一头，老兵却骂她父亲临阵脱逃。你可以替她争辩，也可以让她自己说完。"],
+["失踪的粮","旧垒后仓","仓册写着粮已入库，粮囤却全是沙。负责验粮的小校三日前自尽，遗孀坚持他绝非贪官。你在他靴底找到黑市盐霜，也在袖里找到一张写给朔庭孩子的药方。"],
+["两国黑市","狼牙集","黑市横跨冻河，两边士兵卸下甲胄做同一门生意。王景策的人把本朝军粮换成朔庭皮货，阿勒迟则来买治瘟药。拔刀会毁掉证据，做交易会让你沾上同一笔脏银。"],
+["阵前阿勒迟","雪线界碑","阿勒迟单骑来到界碑，提出交换黑市账本与俘虏。他坦言自己也压着一份对朔庭不利的粮账。萧砚真不信他，小满却认出阿勒迟曾放过边村驿队。"],
+["敌碑夜骑","朔庭荒原","你们趁月色越过雪线，发现朔庭一侧也立着三百块无名碑。十七年前两国都灭过一支护送降民的队伍，再把罪推给对方。萧砚真在碑前跪了很久，第一次问这仗究竟替谁报仇。"],
+["萧砚真的决定","烽燧台","她决定公开父亲弃城令的后半页，即便会让定北军哗变。你可以替她压住军心、劝她先救当前粮荒，或陪她一户户去见阵亡者家属。没有一种做法能让她轻松。"],
+["雪堡密道","雁门北堡","王景策退进废弃雪堡，带走全部真账与两国黑市证人。天策找到一条只容单骑的排烟道，韩钟主张用马群撞开正门，小满则听见堡后有孩子哭。"],
+["雁门雪堡","北地雪堡","雪堡外是强风，内里却烧着粮仓。地牢、账房、军械库分别由不同亲兵把守；他们也已断粮三日。你的潜入路线会决定这些人是敌军、证人，还是一起逃火的同路人。"],
+["王景策焚粮","雪堡粮庭","王景策当众点燃余粮，声称只要两军继续打，粮永远比人值钱。他愿交账换一条出关路。萧砚真要杀他祭旗，阿勒迟却需要他活着指认朔庭买家。"],
+["密令误会","雁门关楼","你截到一封萧砚真写给阿勒迟的密信，只读半页像是献关投敌。军中已有人拔刀围住她。真正的下半页在雪线驿手里，而敌军将在一个时辰后抵达。"],
+["雪线第一日","雁门外城","第一日守外城。你能修拒马、带轻骑扰阵，或护送百姓穿过雪沟。每做一事，另一处便少一双手。萧砚真把帅旗交给你，自己去最缺人的城门。"],
+["雪线第二日","雁门城内","第二日粮尽。两边伤兵隔着冻河呻吟，小满提出交换药材，主战校尉却说这是示弱。天策把最后一碗粥推给陌生孩子，自己拄枪站起。"],
+["雪线第三日","雁门烽台","第三日暴雪封天。阿勒迟发来半个时辰停火，王景策残部却趁机劫城。你必须在守烽台、追叛军与开关撤民之间作出最终部署。"],
+["最后一骑","北门雪道","萧砚真负伤落马，帅旗仍夹在臂弯。你与天策、小满只剩三骑，前方是携火油的叛军，身后是尚未过关的百姓。谁带旗、谁断后、谁去求援，都可能是最后一次分别。"],
+["雁门决阵","雁门主关","王景策先以粮车堵门，再煽动饥兵，最后披上捡来的将甲与两边追兵混战。你要识破假军令、守住百姓通道，并在暴雪中完成第三阶段的阵前决断。"],
+["关外一年","雁门新集","一年后，界碑旁开出一座小集市。萧砚真仍不爱说话，却会替朔庭商贩纠正秤杆；天策偶尔来赌一碗酒，从不再赌旁人的命。战事未绝，但雪线上多了一条人走出来的路。"],
+["空城余火","雁门诸堡","朝堂要你交出弃城与和谈责任，边军则想把你立成神将。你走遍失去家人的军户和被救下的边村，决定留下守关、护民南撤、随骑出关，或以血旗震住两边野心。"],
+["孤骑后话","雪线驿亭","小满把五封写好去处的军报摆在驿桌：飞将、和盟、孤骑、空城、血旗。萧砚真没有替你挑，只把你的马喂饱。风雪再大，下一程也由你亲自上鞍。"]
+],
+trade:[
+["火船撞渡","镜湖东渡","夜色里一艘货船烧成火龙撞向渡口。唐云栖踩着缆绳救人，陆青禾命船工先割断相连商船。船舱深处却传来孩子哭声，火帆上还有四海栈的金鳞印。"],
+["水里的人","镜湖浅湾","落水者抱着账箱不肯撒手，另一边船工被倒桅压住。你只能先靠近一处。唐云栖骂那账房把纸看得比命重，陆青禾却说箱里可能是三百船工的工钱凭据。"],
+["芦苇荡船战","镜湖芦荡","三艘蒙面快船从芦苇荡夹击。钩索扣住船舷，火箭钉进湿帆。你能跳上敌船、斩断芦荡水闸，或护着幸存者钻入狭窄水道。"],
+["酒旗客栈","湖西酒旗店","杯中酒坐在窗边，杯里只有冷水。他把一枚铜钱立在桌上：“我要跟你赌命。你赢，我说谁烧船；你输，替我去沉船舱里捞三十七盏不该亮的灯。”唐云栖脸色忽然变了。"],
+["百舸赛舟","镜湖春汛","水寨按旧规以赛舟决定谁能查沉船。官船、商船、水寨和船工各出一舟，彼此都能使绊。你既要赢，也要决定是否救一艘故意撞来的小船。"],
+["镜湖沉船","镜湖湖心","沉船会随涨潮旋转舱室。货单、被锁的水手与照夜残件分在三层，避水灯只能撑有限时间。唐云栖熟悉旧水寨暗号，却在进入主舱前停住不走。"],
+["杯中无酒","沉船祭台","三十七盏铜灯刻着亡者名字，杯中酒承认当年是他一纸路线图害船队落伏。他赌命不是求死，而是逼每个路过的人确认这笔债尚未被忘。你可让他活着还债，也可应他最后一局。"],
+["四海栈夜谈","临湖四海栈","苏砚舟、陆青禾和唐云栖围着湿货单争吵。账上显示沈万筹把罪拆进数千份小契，人人赚一点，便无人承认运过刀兵。你要追上层母契，还是先保小商户饭碗。"],
+["岛上疗伤","芦花岛","唐云栖替你缝合船钩留下的伤，手抖得比你更厉害。她说自己怕水，是因为当二当家时亲手砍断一条载满同伴的绳索。你可以追问真相、安静陪她，或把自己的旧秘密交换出去。"],
+["湖上封锁","十二连渡","沈万筹封锁渡口，粮价一夜翻三倍。孟沧浪要抢仓，陆青禾想开无银夜市，官府则征走所有大船。三种办法都能救急，也都会得罪另一群人。"],
+["一夜湖市","青旗夜市","灯笼挂满废船，百姓用劳作、布匹和承诺交换粮药。有人拿假药混入摊位，有人趁乱偷契。你要维持秩序，却不能把夜市重新变成只认银子的地方。"],
+["唐云栖被擒","龙湾码头","一封以你名义写的信把唐云栖骗上龙王船。她留下的刀鞘里藏着“别来”的纸条，也可能是逼你追来的暗号。杯中酒说她早想回水寨赎罪，陆青禾怀疑她从未真正离开。"],
+["龙王船下","镜湖龙湾","孟沧浪的旗舰每过一舱便换一面旗。底舱船工准备哗变，主舱摆着鸿门宴，龙骨外又有一条潜水暗路。你的选择决定先遇见俘虏、旧部还是沈家的伏弩。"],
+["龙王船","水寨旗舰","船上没有纯粹的敌人。被掳船工想回家，水寨旧部想保住饭碗，沈家暗桩想烧掉母契。唐云栖被绑在升旗绞盘旁，一旦强攻，整面火帆会落向下舱。"],
+["孟沧浪的旧账","龙王厅","孟沧浪承认收过沈万筹的钱劫赈灾船，却也用那些钱养活十二寨。他愿放唐云栖，条件是你让水寨在新商路占三成。陆青禾说这等于奖励劫船。"],
+["雨中船战","镜湖大雨","沈家舰队趁内乱围湖。雷火弩照亮水面，百姓的小船夹在两军之间。你可以夺旗舰、护船撤离，或利用涨潮把双方大船引入浅滩。"],
+["沉金船","镜湖深水","全部母契和金银被搬上沉金船，沈万筹准备凿底。烧账能解债，也会抹掉工钱；抢金能救市，也会让你成为新契主。陆青禾把母契交给你，手上全是船缆磨出的血。"],
+["谁掌镜湖","湖心议舟","十二寨、四海栈、船工、官府各派一舟围成水上议场。每一方都要求否决权，又都不肯承担亏损。唐云栖站在你身边，却第一次公开反对你的方案。"],
+["青旗与黑旗","镜湖风口","你的旧选择让盟友分裂：获救船工拥青旗，得利寨众举黑旗，小商户则堵住渡口。你必须在不拔刀的情况下说清谁先得粮、谁担亏损、谁可查账。"],
+["沉金决战","沉金船","沈万筹先以契锁封舱，再用钱雨收买盟友，最后凿沉账船逼你二选一。战斗第三阶段，湖水漫过腰际，你还要辨出工钱账、债契与军械账，才能决定哪一叠该留。"],
+["湖上半载","镜湖万舟","半年后，镜湖每日有数百艘船往来。杯中酒把酒旗改成义渡灯，唐云栖仍会在深水处脸白，却不再松开船桨。你们建立的规矩不完美，至少每一笔亏损都有人签名承担。"],
+["沧浪远航","外湖口","孟沧浪请你随船出海，陆青禾请你留守万舟议会，苏砚舟愿把四海栈半数印权交给你。唐云栖只说去哪都行，但她想亲手掌舵。"],
+["湖市余波","镜湖十二渡","债务重算后，有人重获自由，也有人失去多年积蓄。你走访船工、小商户和水寨遗属，补上当初没有时间处理的损失；这些实际补偿将决定镜湖如何评价你。"],
+["惊涛后话","青旗渡","五面新旗在晨风里展开：盟主、通商、义渡、远航、双侠。唐云栖把其中一面塞到你怀里，又跳上船头催你快些。镜湖没有真正平静，只是终于轮到更多人掌舵。"]
+],
+martial:[
+["石壁基本功","青崖山门","入山第一日，穆寒山不让你看绝学，只令你在雨里重复最笨的起式。裘明岫从石阶上走过，故意用同一招削断你头顶落叶。她说论剑台上再见时，不会给你第二次站稳的机会。"],
+["宿敌第一剑","青崖试坪","裘明岫当众邀战，却在你脚下石板开裂时收了半寸剑锋。你若趁机进攻可赢名声，若点破她留手会伤其骄傲，若主动重来则让所有围观弟子等你们淋完一场雨。"],
+["山门酒宴","青崖松堂","十一流派弟子同席，酒令是说出本门最不愿外传的一招。无门客坐在末席，认真抄下每句话。穆寒山要你守门规，裘明岫却说真正的招式不该怕人看。"],
+["经楼失火","藏经崖","半夜经楼起火，失踪的不是秘笈，而是所有基础册。有人故意让普通弟子再也学不到入门武艺。你能救孤本、追黑衣人，或先把记得的招式教给围在楼外的人。"],
+["预选擂台","青崖外台","预选采用连战，胜者可夺败者一件信物。你的第三个对手带伤上台，只因输了便要被逐出师门。裘明岫在台下看着，等你用胜负说明自己相信的规矩。"],
+["断剑谷","青崖后山","失踪弟子的脚印通往断剑谷。谷中每柄残剑都会重演主人败亡的一招，学得越多，越容易忘记这些招为何而出。裘明岫坚持逐剑接招，穆寒山要你先找人。"],
+["洞中疗伤","断剑谷石洞","落石封路后，你与裘明岫困在洞中。她替你包扎时承认自己幼年被柳停云买进门派做人质，赢下论剑是她换自由的唯一价码。你可以承诺帮她、尊重她独自赢，或坦白你也想夺魁。"],
+["无门客的招","山下集市","无门客把抄来的基础招免费教给脚夫和孩童，确实救下被恶霸欺负的摊贩；可他删掉所有收势，孩子一拳打断同伴鼻梁。问题不在传不传，而在谁来教人何时停手。"],
+["师门日常","演武场","穆寒山罚你挑水、修剑架、陪最慢的弟子练步。没有阴谋，也没有秘宝。傍晚大家在灶房抢最后一块肉，裘明岫第一次笑得不像宿敌。第二天，一封匿名战书钉在门上。"],
+["林间伏击","青崖古道","黑衣人用你们昨夜酒宴说出的招式伏击各派弟子。每一招都更快、更准，却没有护住同伴的变化。你可拆招追人、回身救伤者，或故意用一招错误的变化引出抄录者。"],
+["裘明岫身份","听风亭","证据指向裘明岫是柳停云安插的人质。各派要求将她逐出论剑，穆寒山也沉默。她没有辩解，只把剑放到你面前：“你若信证据，便拿走；你若信我，便陪我查完。”"],
+["柳停云","百榜楼","柳停云承认买过裘明岫，也承认资助无门客。他想打破门派垄断，却认为必须先夺取所有秘籍统一改写。理想听来痛快，手段却把弟子和招式都当作可替换的东西。"],
+["掌门议会","青崖大殿","十一门掌门为是否开放基础武学争吵。有人怕江湖大乱，有人只怕失去地位。你可提出分级传授、公开基础并保留师承，或干脆让民间自行抄录。"],
+["师徒一战","落松坪","穆寒山以师长身份拦你。他不是反派，只认定你的方案会毁掉几十代人守住的传承。要继续论剑，你必须与他打一场，也必须在胜负之后仍愿意听完他的担心。"],
+["百榜夜会","青崖灯市","论剑前夜，各派弟子偷偷交换招式、食物与流言。裘明岫约你在灯市屋顶喝酒，说若明日相遇，她绝不会留手。你们可以约定生死、约定都活着，或不作任何保证。"],
+["英雄宴","论剑山庄","英雄宴席上，柳停云安排人羞辱无门弟子，逼他们倒向自己。你若当场掀桌会失去参赛资格，若忍耐可拿到证据，若用酒令反击则可能把矛盾变成全场斗殴。"],
+["论剑初阵","青崖主台","擂台机关会记录并复制每名选手的招式。越华丽的绝学，下一轮越可能被机关反用。你需要取胜，也要决定是否提醒其他对手这个秘密。"],
+["宿敌公平一战","青崖云台","终于轮到裘明岫。没有暗器、没有人质、没有旁人插手。她以最认真一剑敬你，你也能以本门绝学、基础招式或一场不分胜负的长战回应。"],
+["柳停云焚榜","百榜楼顶","裘明岫战后，柳停云点燃排名榜，把抄录机关推到主台。他要让天下从此只有一套最高效的武学。火里夹着基础册原本，救书和追人只能先做一件。"],
+["无门客最终选择","青崖石门","无门客发现自己的天下同招会自动删去保护、留手和疗伤动作。他愿意停下，却已无法独自关闭机关。你可以毁掉全部抄录、保留有注释的基础招，或让每门各自带走一部分。"],
+["青崖终武","论剑主台","机关先复制你的四个战斗技能，再夺取流派核心机制，最后变成没有收势的天下同招。第三阶段只有保护旁人、治疗对手、拆机关或主动退步这些“不为取胜”的行动能制造破绽。"],
+["一年再论","青崖新学堂","一年后，山门外多了给脚夫、女子和无籍孤儿的基础学堂。有人练成后行侠，也有人学会便惹事。穆寒山每月都来挑错，裘明岫则坚持把你的败招讲得最详细。"],
+["武学新规","十一门会碑","各派请你把新规刻上石碑。刻得太严会变成新门阀，太松又会让杀招横流。你需要写下谁能学、谁来教、谁为滥用负责，以及师承是否仍值得尊重。"],
+["论剑后话","青崖云海","五条路摆在云海前：宗师、盟主、无门大侠、与宿敌并辔，或把武功还给日常。裘明岫已牵来两匹马，穆寒山则在山门等一杯辞行酒。"]
+],
+message:[
+["带血信使","州桥晨雾","一名信使倒在州桥，胸口插着无羽短箭，手却死死护住三封同样落款的信。林鹊认出知北游火漆，叶双白却说三封里至多一封是真的。追杀者已经混进早市。"],
+["长街夺马","汴京长街","刺客抢走信使的马与一封信，林鹊翻身跃上你的鞍后。你们在菜车、社火队和巡街军之间追逐，既要截马，也不能让一辆满载孩童的花车翻进河沟。"],
+["州桥茶选","州桥茶摊","柠檬茶少甜摆出三杯茶：一杯给官驿、一杯给边军、一杯给十二驿。她声称选哪杯，便会有一封信先被相信。叶双白笑她装神弄鬼，林鹊却看见杯底藏着驿路图。"],
+["第一驿","城北青石驿","第一驿没有驿卒，只有一锅仍热的粥和墙上新刻的箭痕。林鹊从梁上找出父亲旧木牌，背面写着“不要把三封信送到同一个人手里”。门外传来黑风寨马铃。"],
+["黑风寨截信","断旗岭山道","山贼用绳索拦路，为首者说只抢信不抢钱。被抢的信件会在次日以更高价卖回原主。你可强闯、假装送假信，或查出寨中有人专门保护无钱赎信的百姓。"],
+["黑风寨","断旗岭","寨门贴着十七张悬赏，地牢里关的是假冒信使，粮仓里却养着逃荒者。山贼、亡兵和饥民各说一半真话。你必须找回原信，又决定是否毁掉靠卖信养人的生意。"],
+["破庙夜守","无名破庙","出寨后暴雨封路。你、林鹊、何三与两名陌生旅人围火而坐，谁都可能是追兵。半夜有人摸向信囊；若立刻拔刀，会吓醒怀里藏着灵兽蛋的孩子。"],
+["偷蛋奇侠","破庙后山","何三终于承认，他与几名驿卒偷走权贵豢养的异兽蛋，只为不让其被炼药。林鹊笑他是“偷蛋奇侠”，却发现蛋壳花纹与信上密押一致。这条看似胡闹的支线可能通向真正暗道。"],
+["重复来信","柳林驿","第二、第三驿陆续收到内容相同、字迹不同的信，要求边军提前开战。每封都用了真的火漆。有人不是伪造一封信，而是在伪造整条传递过程。"],
+["十七拦路","白骨坡","十七坐在路中央掷骨骰：“我要跟你赌命。你赢，拿走被截的信；你输，把自己的名字写进第十七格。”她认得密押，却拒绝解释从何处学来。林鹊悄悄发现骰子排列就是下一驿坐标。"],
+["茶棚群战","枯柳茶棚","追兵、假信使与不明身份的官差同时冲进茶棚。桌椅翻飞，热水泼满地。你可以护住信、追领头人，或让林鹊从烟囱带走真正需要活着到达的人。"],
+["空驿十二","知北游旧道","接下来的驿站全空，马槽却每日有人添草。叶双白说掌卷人江听渡主动撤走驿卒，是为了避免他们被灭口；何三却找到一具来不及撤走的尸体。"],
+["十二处火","北地驿图","同一夜，十二驿同时起火。每处都存着不同证言、药材或避难名单，不可能全救。你必须按时间、人员和信件价值排列路线，也要承担被放弃驿站的后果。"],
+["十二驿火夜","知北游十二驿","火情会根据你过去传播的消息重新排序。驿卒可能是敌人，截信者也可能替你开门。你在火、换封机关与快马接力之间奔走，保住的不是一封万能真信，而是足够多可互相核对的来源。"],
+["江听渡现身","断钟驿","掌卷人江听渡承认删改过消息。他曾如实送出军情，害两个村庄遭报复，从此相信真话必须由懂后果的人延迟。林鹊认为这是傲慢，你却能看见他确实救过许多人。"],
+["叶双白背叛","落雁渡","叶双白偷走三封信，把其中两封卖给官军和商会。她说自己只是确保无论谁赢都有人保住知北游。林鹊拔刀要追，你却知道她留下了一条刻意能被发现的假脚印。"],
+["断旗岭饮酒","断旗岭旧亭","你们追上叶双白，却没有立刻动手。何三搬出一小坛浊酒，十七也不知为何坐到火边。众人轮流说第一次送丢的信，林鹊终于讲起父亲最后一次出门。"],
+["七骑同路","北上官道","林鹊、叶双白、何三、十七以及两名被你救过的驿卒组成七骑。每个人都带一封不同版本的消息，约定即使有人倒下，也不让剩下的人把多封信改成一封。"],
+["最后一驿","雁回驿","最后一驿被官军包围，百姓却聚在门外等开战或停战消息。你可以从屋顶送入原信、公开朗读所有版本，或让七骑各找一群见证人分别说明来源。"],
+["万里一声","总驿钟楼","江听渡启动总驿铜钟，想把自己筛选过的版本同时送往天下。第一阶段夺钟，第二阶段救被困驿卒，第三阶段则要决定是否保留这套能让消息一夜传万里的工具。"],
+["信被谁信","州桥回音","消息终于抵达各地，却并非人人相信。你保住的来源、驿卒、伙伴信任和曾说过的假话共同决定结果。有人停战，有人仍拔刀，也有人第一次要求看落款而不是只听结论。"],
+["万里半年","知北游新驿","半年后，新驿每封信都附来源、改动人与延误原因。速度慢了，争吵多了，却少有人能神不知鬼不觉换掉整条路。林鹊在门上刻下父亲的木牌，又留出一块空位给你。"],
+["说书与送信","南北长路","叶双白邀你掌知北游，何三想继续送信，十七说她愿做最危险那段护路人。林鹊却想与你去没有驿站的地方，亲自把沿途故事讲给人听。"],
+["万里后话","州桥驿牌","五枚新驿牌挂在晨光里：行主、第一信使、假信定局、万里说书、群侠同路。偷蛋奇侠的灵兽从屋檐探头，把最上面一枚叼走，众人追着它跑过半条街。"]
+]};
+
+const V6_BRANCH_INDEXES=new Set([0,2,4,6,8,10,12,14,17,20]);
+const V6_CHOICE_SETS={
+  law:["先护住被卷入的人","追住正在毁证的人","布一张让三方互相见证的网"],
+  border:["先保百姓与粮队","抢在风雪前追敌","联络两边可信之人共同查证"],
+  trade:["先救落水者与船工","夺船追账，不让主使脱身","召集小商户与水寨共担风险"],
+  martial:["守住同门与伤者","以本门绝学正面破招","用基础招拆清来龙去脉"],
+  message:["先保信使与见证人","快马追截信者","分开保存消息并标清来源"]
+};
+const V6_RESULT_TONES={
+  law:["你把人从刀口与案卷之间先拖了出来。证词因此活下去，但毁证者也多得半刻喘息。燕七娘记住你先伸手的次序。","你一路追到雨巷尽头，逼对方丢下一件关键物证。回来时，获救者已经被顾临川安置，只是有人怨你没在最怕的时候留下。","你让互不信任的三方各拿一份证物，任何人想改口都必须惊动另外两方。办法慢，却使周千户第一次无法一刀断线。"],
+  border:["你先把冻僵的人和散乱粮车收回阵中。军令进度慢了一截，队伍却愿在下一场雪里继续跟你。","你冒雪追出十余里，夺回主动也带回一处新伤。萧砚真没有夸你，只把自己的披风扔到你肩上。","你让敌我两边各派一名不掌兵权的人核对证据。将军们都不满意，边民却第一次有机会说完自己的话。"],
+  trade:["你抓住伸来的手，账箱与线索沉下去一部分。唐云栖骂你败家，转身却把自己的干衣塞给伤者。","你踩着湿索追上主船，抢回能继续查下去的凭据。陆青禾提醒你，后方有人替这场漂亮追击付了医药钱。","你把风险、亏损和决策写在同一张临时契上。没人完全满意，但这次不再只有最有钱的人签字。"],
+  martial:["你收招回身，把伤者带出招式余波。观战者少了一声喝彩，却有人第一次明白收势也是武学。","你以流派核心正面破开难关，赢得满场喝彩，也让抄录机关记住了你的节奏。下一战它会更懂你。","你把看似神奇的招式拆回步、息、眼三项。普通弟子也能跟上，无门客因此对你既敬且惧。"],
+  message:["你先让人活着把话说完。信件迟到一程，却多了一个能回答追问的见证者。","你纵马抢回关键一封，风从裂开的袖口灌进去。林鹊追上后只骂一句‘别死得比信快’。","你把同一消息拆成数份，注明谁写、谁改、谁承担。速度慢了，却再难被人一把火烧成唯一说法。"]
+};
+const HEART_METHODS={
+  tieyi:{name:"《镇岳不动篇》",desc:"受击积累不动势；心法六重后，替伙伴挡刀会把余伤化为反击。"},
+  suwen:{name:"《百草回春录》",desc:"治疗留下芳息；心法六重后，净化成功会为全队附加回春。"},
+  suimeng:{name:"《无间照影诀》",desc:"隐匿积累影痕；心法六重后，第三道影痕可选择不杀而封穴。"},
+  shenxiang:{name:"《五音山河谱》",desc:"招式排列宫商角羽；心法六重后，调和余响会改变战场环境。"},
+  jiuling:{name:"《幽契万灵书》",desc:"九灵的核心心法，强化魂息、契灵与状态协同；上限高于其他流派，但高阶契灵会积累反噬，必须用解契、治疗与控场管理。"},
+  xuehe:{name:"《赤霄战意经》",desc:"攻守积累战意；心法六重后，满战意交涉也能形成压迫。"},
+  canglan:{name:"《听潮断浪章》",desc:"涨退潮轮转；心法六重后，水域环境行动可立即切换潮势。"},
+  xuanji:{name:"《天工逆算录》",desc:"观察积累机括；心法六重后，损毁机关会返还一次改造机会。"},
+  hongyin:{name:"《梵音慈航曲》",desc:"治疗、镇敌与守护积累音色；心法六重后，主动停奏可替同伴解控。"},
+  chaoguang:{name:"《照月双相经》",desc:"明辉与幽影互换；心法六重后，承认错误的剧情选择永久增强明辉。"},
+  longyin:{name:"《龙吟归一诀》",desc:"剑意随出剑与收剑变化；心法六重后，放弃致命一击能领悟归元剑式。"}
+};
+const COMMON_HEARTS={
+  assist_guard:{name:"《龟息护元功》",slot:"assist",desc:"气血低于三成时生成护盾。"},
+  assist_clear:{name:"《澄心诀》",slot:"assist",desc:"每场战斗首次受到控制时缩短一回合。"},
+  qing_fuyan:{name:"《浮燕步》",slot:"qinggong",desc:"提高逃跑与翻越检定，雨夜额外生效。"},
+  qing_taxue:{name:"《踏雪无痕》",slot:"qinggong",desc:"雪地行动不再额外消耗精力。"},
+  secret_gamble:{name:"《三息赌命术》",slot:"secret",desc:"每战一次，以当前一半气血换取高会心；不可连续使用。"},
+  secret_rescue:{name:"《回灯针》",slot:"secret",desc:"伙伴濒危时保住一点气血，但本次副本评分下降。"}
+};
+const LEGACY_WEAPONS={
+  tieyi:["镇门旧盾","玄铁城壁"],suwen:["青囊铃","万春玉铃"],suimeng:["无声双刃","照影无间"],shenxiang:["焦尾残琴","九霄清商"],
+  jiuling:["引魂灯杖","万灵夜灯"],xuehe:["断烽长枪","赤霄龙槊"],canglan:["折潮长刀","鲸波断海"],xuanji:["七巧匣","天工无尽"],
+  hongyin:["旧梵铃","慈航大音"],chaoguang:["月相轮","明暗同辉"],longyin:["无名古剑","龙吟归一"]
+};
+const SCHOOL_STORY_LABELS={
+  tieyi:"立盾封住最窄的生路",suwen:"从伤势和药味查出遗漏",suimeng:"潜入阴影截下暗手",shenxiang:"以音律传讯并扰乱阵脚",jiuling:"问契灵死者最后所见",
+  xuehe:"纵马突阵夺回先机",canglan:"借水势另开一条路",xuanji:"拆机关改成救人的器具",hongyin:"以曲安定人心再行动",chaoguang:"明暗换位制造假目标",longyin:"收剑问心，逼对方说真话"
+};
+function makeV6SchoolActions(routeId,index,next){
+  const out={};Object.entries(SCHOOL_STORY_LABELS).forEach(([school,label])=>{
+    const id=`v6_school_${routeId}_${index}_${school}`;
+    STORY[id]={chapter:`${V6_ROUTE_META[routeId].name} · 流派异闻`,place:V6_BEATS[routeId][index][1],title:`${SCHOOLS[school].name} · ${V6_BEATS[routeId][index][0]}`,text:`${label}并非装饰性的巧招。你用「${SCHOOLS[school].mechanic.split("：")[0]}」改变了现场次序：伙伴少受一处伤，敌人暴露一条新路，后续对话也承认这是${SCHOOLS[school].name}才能办到的事。\n\n${V6_RESULT_TONES[routeId][index%3]}`,options:[{label:"沿被改变的局面继续",next,effects:{stats:{xp:24,cultivation:18},relation:{[V6_ROUTE_META[routeId].npc]:{favor:1,trust:2}},world:{[`school_${routeId}_${index}_${school}`]:true}}}]};
+    out[school]={label:`【${SCHOOLS[school].name}】${label}`,next:id,effects:{stats:{reputation:1}}};
+  });return out;
+}
+function buildV6Campaign(routeId){
+  const meta=V6_ROUTE_META[routeId],beats=V6_BEATS[routeId],bossAt=19;
+  beats.forEach((beat,i)=>{
+    const id=`route_${routeId}_${i}`,next=i<beats.length-1?`route_${routeId}_${i+1}`:`route_${routeId}_after`;
+    const node={chapter:`${meta.name} · 第${i+1}幕`,place:beat[1],title:beat[0],text:beat[2],
+      onEnter:{routeProgress:{id:routeId,stage:i+1},stats:{xp:i%3===0?20:10,cultivation:i%4===0?12:6},quest:{id:"main",name:meta.name,stage:`第${i+1}幕 · ${beat[0]}`}},options:[]};
+    if(i===5||i===13){
+      node.options=[{label:`进入副本 · ${DUNGEONS[meta.dungeons[i===5?0:1]].name}`,action:"routeDungeon",dungeon:meta.dungeons[i===5?0:1],next,className:"combat"},{label:"先检查补给与伙伴状态",next:`v6_rest_${routeId}_${i}`}];
+      STORY[`v6_rest_${routeId}_${i}`]={chapter:node.chapter,place:beat[1],title:"灯下整备",text:`你们没有鲁莽闯门。${meta.partner}与你逐项核对药物、绳索、退路和谁负责带伤者撤离。片刻准备让副本多一条情报起点，也使这次同行不像一串只求胜负的按钮。`,options:[{label:"整备完毕，进入副本",action:"routeDungeon",dungeon:meta.dungeons[i===5?0:1],next,effects:{world:{dungeonPrepared:true}},className:"combat"}]};
+    }else if(i===1||i===9||i===16){
+      node.options=[{label:"迎上这场正面交锋",action:"battle",enemy:i===1?"roadBandits":i===9?(routeId==="message"?"seventeen":routeId==="trade"?"cupWine":routeId==="border"?"tianCe":"dockThugs"):"roadBandits",next,className:"combat"},
+        {label:"借环境与伙伴抢得先手",action:"battle",enemy:i===1?"roadBandits":i===9?(routeId==="message"?"seventeen":routeId==="trade"?"cupWine":routeId==="border"?"tianCe":"dockThugs"):"roadBandits",next,effects:{world:{nextBattleBuff:"hidden"},relation:{[meta.npc]:{trust:1}}},className:"combat"}];
+    }else if(i===bossAt){
+      node.options=[{label:`与${meta.partner}并肩进入三阶段决战`,action:"battle",enemy:meta.boss,next,className:"combat",effects:{world:{allyCall:true},relation:{[meta.npc]:{trust:3}}}},
+        {label:"先公开一路取得的证据，再拔兵",action:"battle",enemy:meta.boss,next,className:"combat",effects:{world:{bossEvidence:true},stats:{reputation:2}},condition:{stat:"insight",min:12}}];
+    }else if(i===beats.length-1){
+      node.options=meta.endings.map((name,outcome)=>({label:name,action:"routeResolve",route:routeId,outcome}));
+    }else if(V6_BRANCH_INDEXES.has(i)){
+      node.options=V6_CHOICE_SETS[routeId].map((label,choice)=>{
+        const echo=`v6_echo_${routeId}_${i}_${choice}`;
+        STORY[echo]={chapter:node.chapter,place:beat[1],title:`${beat[0]} · 回响`,text:V6_RESULT_TONES[routeId][choice],options:[{label:"带着这项后果继续",next,effects:{relation:{[meta.npc]:{favor:choice===0?2:0,trust:choice===2?2:1}},personality:{[choice===0?"benevolence":choice===1?"obsession":"scheme"]:1},world:{[`branch_${routeId}_${i}`]:choice}}}]};
+        return{label,next:echo};
+      });
+    }else node.options=[{label:i===7?"与同伴把话说完，再上路":"继续赶路，看看这一选择如何落到人身上",next}];
+    if(i===4||i===14)node.v6SchoolActions=makeV6SchoolActions(routeId,i,next);
+    if(i===7||i===15)node.options.push({label:"先回福地歇一夜，稍后从原处继续",action:"pauseRoute"});
+    STORY[id]=node;
+  });
+  STORY[`route_${routeId}_after`]={chapter:`${meta.name} · 章回收束`,place:V6_BEATS[routeId][23][1],title:`${meta.name}已成一卷`,text:`这不是仓促终止故事的小结局。你完整走过二十四幕、两座副本、伙伴误会与生死托付，才让「${meta.name}」暂告一段落。江湖仍保留所有装备、关系、支线和世界后果。\n\n你可以回福地整备，再从州桥选择另一条长线；完成两条普通主线后，照夜长明的隐藏真相线会逐步显现。`,options:[
+    {label:"回福地整理战利品与来信",next:"v6_route_select",effects:{unlockFort:true}},
+    {label:"直接查看下一条完整长线",next:"v6_route_select"},
+    {label:"两条长线已成，追查照夜长明",next:"world_final_0",condition:{routeCompleted:2},hidden:true}
+  ]};
+}
+NORMAL_ROUTE_IDS.forEach(buildV6Campaign);
+
+const V6_SIDE_STORIES={
+  law_oldknife:["快刀慢一步","关山鹤误杀者的母亲找到一名新证人，却拒绝再把命交给捕快。","你陪她走过三条旧巷，发现证人靠替人补伞过活。周千户的暗探也已找到这里。","关山鹤没有求原谅，只在伞铺外守了一夜。老妪最终决定亲自出庭，而非把证词交给任何英雄代说。"],
+  law_teadebt:["七娘的桌钱","燕七娘欠遍州桥的桌钱其实是一串联络暗号。","你跟着掌柜逐桌收账，每张欠条都指向一名受保护的旧证人。最后一桌坐着当年替她烧卷的人。","燕七娘补齐银钱，也补了一句多年没敢说的道歉。茶楼关系网从此成为主线中的安全退路。"],
+  border_foal:["雪沟小黑鬃","黑鬃马场少了一匹刚断奶的小马。","雪沟脚印一半被狼追，一半通向朔庭牧童。拔刀只会惊散马群，你得与小满绕风口靠近。","牧童只是想救被毒草伤到的小马。韩钟收下他做临时马倌，边军第一次给朔庭孩子留了一张饭票。"],
+  border_stove:["无名军灶","废烽台下仍有人每夜生火，却从不留下脚印。","你与萧砚真煮一锅稀粥，把十七年前两边阵亡者的名字一一念出。风里有人接上漏掉的那个。","翌日军灶只剩两只并排木碗。萧砚真把它们带回营中，主线终战时伤兵不再拒绝交换药材。"],
+  trade_wages:["三百人的工钱","沉船账箱里有一叠被水泡烂的船工工票。","陆青禾带你按印泥、绳结和旧船号逐一认领。有人已经死去，有人冒领，还有人宁愿不要钱也不肯暴露新身份。","工钱最终没有完美发清，却第一次由船工自己签下未领原因。金鳞契的母本因此露出一处无法抵赖的缺口。"],
+  trade_lamps:["三十七盏灯","杯中酒请你把三十七盏祭灯送到亡者家中。","有的家属骂他，有的早已迁走，还有一户把灯摔碎，拒绝让迟来的悔恨进入门槛。","最后一盏没有人收。杯中酒把它挂在义渡，说今后每救一条命便添一盏水，不拿酒洗债。"],
+  martial_slow:["最慢的弟子","演武场上最慢的弟子准备连夜下山。","你没有传绝学，只陪他把一步分成落脚、转胯与呼吸。裘明岫路过时故意用同样的慢招与你拆了百余合。","那弟子仍未变成天才，却能稳稳接住落下的剑架。后来终战混乱里，正是这一步救了三名旁观者。"],
+  martial_manual:["被偷的基础册","失火经楼丢失的基础册出现在山下孩童手中。","册子不是被盗，而是老书吏偷偷抄给无钱拜师的人。门派追兵已到，你要保护人，也要处理其中没有收势的危险页。","你们在集市开了三日公开课，把每一招的停手位置补回去。穆寒山没有赞同，却悄悄送来一箱旧木剑。"],
+  message_egg:["偷蛋奇侠","何三怀里的异兽蛋半夜裂了一道缝。","孵化需要三处驿火的温度、镜湖湿苔和一段不会惊吓幼兽的曲子。你得在送信途中顺路收齐，不能让主线停下来等。","墨色小兽破壳后第一件事便叼走假信。它能闻出火漆里的药味，成为十二驿副本的隐藏房钥匙。"],
+  message_home:["迟到二十年的信","一封家书在空驿墙缝里躺了二十年。","收信人已经换名、成家，并公开声称从无故乡。林鹊问送达是否仍是信使唯一的职责。","你没有替收信人拆开，只告诉他有一封信在新驿等候。三个月后信不见了，柜上多了一碗给陌生信使的热茶。"]
+};
+Object.entries(V6_SIDE_STORIES).forEach(([id,[name,desc,middle,ending]])=>{
+  const route=id.split("_")[0],npc=V6_ROUTE_META[route].npc,start=`side_${id}_0`;
+  SIDE_QUESTS[id]={name,category:"伙伴任务",desc,need:()=>state?.activeRoute===route&&(state.routeNode||0)>=5,done:()=>!!state?.world?.[`sideDone_${id}`],start};
+  STORY[start]={chapter:`${V6_ROUTE_META[route].name} · 支线`,place:V6_BEATS[route][Math.min(8,id.length%12)][1],title:name,text:desc,options:[
+    {label:"停下脚步，把这件小事查到底",next:`side_${id}_1`,effects:{relation:{[npc]:{favor:2,trust:1}}}},
+    {label:"先问清当事人是否真的需要你插手",next:`side_${id}_1`,effects:{personality:{scheme:1},relation:{[npc]:{trust:2}}}},
+    {label:"用当前流派的办法先解决眼前危险",next:`side_${id}_1`,effects:{stats:{cultivation:12},world:{[`sideSchool_${id}`]:true}}}
+  ]};
+  STORY[`side_${id}_1`]={chapter:`${V6_ROUTE_META[route].name} · 支线`,place:STORY[start].place,title:`${name} · 人情落地`,text:middle,options:[
+    {label:"承担代价，把事情做完",next:`side_${id}_2`,effects:{stats:{chivalry:2,xp:30},relation:{[npc]:{favor:2,trust:2}}}},
+    {label:"保留秘密，只解决最急的一部分",next:`side_${id}_2`,effects:{personality:{freedom:1},relation:{[npc]:{trust:1}}}}
+  ]};
+  STORY[`side_${id}_2`]={chapter:`${V6_ROUTE_META[route].name} · 支线收束`,place:STORY[start].place,title:`${name} · 后来`,text:ending,options:[{label:"把这段人情带回主线",action:"returnSide",effects:{world:{[`sideDone_${id}`]:true},items:{page:1},stats:{wealth:40}}}]};
+});
+
+STORY.p2.text="州桥雨歇，林鹊把木匣里的证物一件件摊在茶桌上。囚车关防指向汴京旧案，无名军箭带着雁门冻土，沉船木片仍有镜湖咸腥，断剑帖藏着青崖火灰，三封假信则盖着知北游十二驿的真火漆。\n\n这一次不是五个几分钟就结束的小故事。你选中的路会锁定为当前长篇主线，走完二十四幕、双副本与伙伴结局后才回到州桥。";
+STORY.p2.onEnter={achievement:"prologue",quest:{id:"main",name:"州桥五路",stage:"选择一条完整长线并承担它的后果"},stats:{xp:50,cultivation:30},items:{smallPill:2,page:1}};
+STORY.p2.options=NORMAL_ROUTE_IDS.map(id=>({label:`${V6_ROUTE_META[id].name} · 与${V6_ROUTE_META[id].partner}同行`,action:"lockRoute",route:id}));
+STORY.v6_route_select={chapter:"江湖长卷 · 路线选择",place:"汴京·州桥",title:"茶尚温，路仍长",text:"已完成的故事不会被重置，装备、关系、伤势和传闻都跟着你回来。州桥五路各自是一段完整长篇；正在进行的路线不能从这里偷换，只有走到章节歇脚处才能暂别。\n\n请选择一条尚未走完的江湖长卷。",options:NORMAL_ROUTE_IDS.map(id=>({label:V6_ROUTE_META[id].name,action:"lockRoute",route:id}))};
+
+function startV6Route(routeId){
+  if(!NORMAL_ROUTE_IDS.includes(routeId))return;
+  if(state.routeLocked&&state.activeRoute&&state.activeRoute!==routeId){toast(`当前正行至「${V6_ROUTE_META[state.activeRoute].name}」，只能在歇脚幕暂别。`,"bad");return}
+  const resume=state.world.pausedRoute?.id===routeId&&STORY[state.world.pausedRoute.node]?state.world.pausedRoute.node:null;
+  state.activeRoute=routeId;state.routeLocked=true;state.routeChapter=1;state.routeNode=0;state.routeBranch=state.routeBranch||{};state.routeFlags=state.routeFlags||{};
+  state.routes.primary=routeId;if(!state.routes.seeds.includes(routeId))state.routes.seeds.push(routeId);
+  state.quests.main={name:V6_ROUTE_META[routeId].name,stage:`第一幕 · ${V6_BEATS[routeId][0][0]}`,status:"进行中"};
+  addHistory(`${resume?"继续":"锁定"}长篇主线「${V6_ROUTE_META[routeId].name}」。`);if(resume)delete state.world.pausedRoute;enterNode(resume||`route_${routeId}_0`);
+}
+function pauseV6Route(){
+  const rid=state.activeRoute;if(!rid)return;state.routeLocked=false;state.world.pausedRoute={id:rid,node:state.node};
+  state.activeRoute=null;toast(`已在安全处暂别「${V6_ROUTE_META[rid].name}」，进度与支线完整保留。`,"good");enterNode("v6_route_select");
+}
+
 STORY.c1_0.options.forEach((o,i)=>o.next=["echo_ticket","echo_medicine","echo_witness","echo_official"][i]);
 STORY.c1_after.options.forEach(o=>{if(o.next==="c2_0")o.next="gamble_tiance_1"});
 STORY.c2_after.options.forEach(o=>{if(o.next==="c3_0")o.next="gamble_cup_1"});
@@ -1368,11 +1678,17 @@ function defaultRouteState(){
 function blankGear(){const g={};SLOTS.forEach(s=>g[s]=null);return g}
 function defaultSkillState(schoolId="tieyi"){
   const list=SCHOOLS[schoolId]?.skills||[];
-  return {points:1,learned:list.slice(0,2).map(x=>x.id),equipped:list.slice(0,2).map(x=>x.id),mastery:{},branch:null,meridians:{ren:0,du:0,chong:0},innerArts:[],mentorFavor:0};
+  return {points:1,learned:list.slice(0,1).map(x=>x.id),equipped:list.slice(0,1).map(x=>x.id),mastery:{},branch:null,
+    meridians:{ren:0,du:0,chong:0,dai:0,yinwei:0,yangwei:0},
+    heartMethods:{main:{id:`heart_${schoolId}`,level:1},assist:null,qinggong:{id:"qing_fuyan",level:1},secret:null},
+    legacy:{id:`legacy_${schoolId}`,stage:0,temper:0,choice:null},mentorFavor:0};
 }
 function freshState(seed={}){
   const baseStats={hpMax:115,hp:115,mpMax:70,mp:70,attack:16,defense:9,agility:9,crit:7,hit:88,break:4,healing:4,luck:6,insight:7,reputation:0,chivalry:0,notoriety:0,wealth:80,energyMax:100,energy:100,xp:0,cultivation:0};
-  return {version:VERSION,run:seed.run||1,startedAt:Date.now(),playSeconds:0,node:"p0",player:{name:"",gender:"",look:"",title:"",origin:"",school:"",obsession:"",secret:"",keepsake:"",level:1,realm:0,stats:baseStats,permanentWound:0},
+  return {version:VERSION,run:seed.run||1,startedAt:Date.now(),playSeconds:0,node:"p0",
+    activeRoute:null,routeLocked:false,routeChapter:0,routeNode:0,routeBranch:{},routeFlags:{},routeCompleted:[],routeEnding:{},
+    dungeonId:null,dungeonDifficulty:null,dungeonRoute:null,dungeonStage:0,dungeonRoom:0,dungeonBossPhase:0,dungeonScore:0,dungeonReturnNode:null,
+    player:{name:"",gender:"",look:"",title:"",origin:"",school:"",obsession:"",secret:"",keepsake:"",level:1,realm:0,stats:baseStats,permanentWound:0},
     personality:{benevolence:0,scheme:0,freedom:0,obsession:0},inventory:{equipment:[],items:{smallPill:2,spiritTea:1},capacity:24,warehouse:[]},gear:blankGear(),
     relations:defaultRelations(),skills:defaultSkillState(),quests:{main:{name:"尚未启程",stage:"完成角色创建",status:"进行中"}},routes:defaultRouteState(),world:{entered:{},regions:["汴京"],factions:{court:0,merchant:0,folk:0,jianghu:0},weather:"雨夜",time:"三更",currentDungeon:null,fullTruth:false,routeNotice:"",gamblers:{tianCe:{oath:0,debt:0},cupWine:{oath:0,debt:0},seventeen:{oath:0,debt:0}}},
     fort:{unlocked:false,level:0,herbs:0,visitors:[],rooms:[],beastCare:0,dispatches:0},dungeons:{},achievements:[],endings:[],history:[],adventures:[],battleWins:0,flees:0,heals:0,itemsFound:0,failures:0,
@@ -1469,12 +1785,14 @@ function routeReading(){
 }
 function resolveRoute(rid,outcome){
   if(!ROUTES[rid])return;
-  const first=!state.routes.completed.includes(rid),chronicle=`route_${rid}_${outcome}`;state.routes.progress[rid]=20;state.routes.outcomes[rid]=outcome;
+  const first=!state.routes.completed.includes(rid),chronicle=`route_${rid}_${outcome}`,longRoute=NORMAL_ROUTE_IDS.includes(rid);state.routes.progress[rid]=longRoute?24:20;state.routes.outcomes[rid]=outcome;
   if(first){
     state.routes.completed.push(rid);if(!meta.routes.includes(rid))meta.routes.push(rid);if(!state.endings.includes(chronicle))state.endings.push(chronicle);if(!meta.endings.includes(chronicle))meta.endings.push(chronicle);addEquipment(ROUTE_REWARDS[rid]);addItem("page",2);
     state.player.stats.wealth+=160;state.player.stats.cultivation+=220;unlockAchievement(`route_${rid}`);
   }
-  state.quests.main={name:"天下仍在走",stage:state.routes.completed.length>=2?"两条长线已成，可进入万象同夜":"选择另一条正在恶化的主线",status:"进行中"};
+  if(!state.routeCompleted.includes(rid))state.routeCompleted.push(rid);state.routeEnding[rid]=outcome;state.activeRoute=null;state.routeLocked=false;state.routeChapter=24;state.routeNode=24;
+  if(state.routeCompleted.length>=2)state.world.hiddenRouteUnlocked=true;
+  state.quests.main={name:"天下仍在走",stage:state.routes.completed.length>=2?"两条长线已成，照夜长明已有回应":"返回州桥，选择另一条完整长线",status:"进行中"};
   state.world.routeNotice=`章回落定：${ROUTES[rid].endings[outcome].name}。这改变了世界，但没有结束你的江湖。`;
   addHistory(`完成长线「${ROUTES[rid].name}」，留下章回「${ROUTES[rid].endings[outcome].name}」。`);
   saveMeta();checkLevel();checkAchievements();autoSave();enterNode(`route_${rid}_after`);
@@ -1515,7 +1833,7 @@ function applyEffects(effects={},source=""){
 }
 function addHistory(text){state.history.push({time:Date.now(),chapter:STORY[state.node]?.chapter||"江湖",text});if(state.history.length>80)state.history.shift()}
 function checkLevel(){
-  const s=state.player.stats;const target=Math.min(30,1+Math.floor(s.xp/110));
+  const s=state.player.stats,cap=state.run>=2?60:(state.world.hiddenRouteUnlocked?50:40);const target=Math.min(cap,1+Math.floor(s.xp/110));
   if(target>state.player.level){const old=state.player.level,d=target-old;state.player.level=target;s.hpMax+=d*7;s.mpMax+=d*3;s.attack+=d*2;s.defense+=d;s.hp=s.hpMax;s.mp=s.mpMax;grantLevelGrowth(old,target);toast(`升至 ${target} 级：获得武学点，气血内力已恢复`,"good")}
 }
 function grantLevelGrowth(oldLevel,newLevel){
@@ -1573,14 +1891,24 @@ function resolveText(s){return String(s).replaceAll("{{name}}",state.player.name
 function enterNode(id){
   if(!STORY[id]){console.warn("missing node",id);id="p0"}
   state.lastNode=state.node;state.node=id;state.battle=null;
+  const routeMatch=id.match(/^route_(law|border|trade|martial|message)_(\d+)$/);
+  if(routeMatch){state.activeRoute=routeMatch[1];state.routeLocked=true;state.routeNode=Number(routeMatch[2]);state.routeChapter=state.routeNode+1}
   const node=STORY[id];
   if(!state.world.entered[id]){state.world.entered[id]=true;if(node.onEnter)applyEffects(node.onEnter,`node:${id}`)}
   if(node.place&&!state.world.regions.includes(node.place.split(/[·]/)[0]))state.world.regions.push(node.place.split(/[·]/)[0]);
   addHistory(`抵达「${node.title}」`);
   autoSave();render();
 }
+function nodeOptions(node,id=state?.node){
+  const out=[...(node.options||[])];
+  if(node.v6SchoolActions&&state?.player?.school){
+    const school=state.player.school,act=node.v6SchoolActions[school];
+    if(act)out.push({label:act.label,next:act.next,hidden:true,effects:act.effects||{}});
+  }
+  return out;
+}
 function chooseOption(index){
-  const node=STORY[state.node],opt=node.options[index];if(!opt)return;
+  const node=STORY[state.node],opt=nodeOptions(node,state.node)[index];if(!opt)return;
   const cond=conditionResult(opt.condition);if(!cond.ok){toast(cond.reason,"bad");return}
   if(opt.effects)applyEffects(opt.effects,`choice:${state.node}:${index}`);
   addHistory(opt.label);clickSound();
@@ -1598,6 +1926,8 @@ function chooseOption(index){
   }
   if(opt.action==="battle"){startBattle(opt.enemy,opt.next);return}
   if(opt.action==="routeDungeon"){state.world.routeDungeonNext=opt.next;openDungeon(opt.dungeon);return}
+  if(opt.action==="lockRoute"){startV6Route(opt.route);return}
+  if(opt.action==="pauseRoute"){pauseV6Route();return}
   if(opt.action==="routeResolve"){resolveRoute(opt.route,opt.outcome);return}
   if(opt.action==="crossroads"){openCrossroads();return}
   if(opt.action==="open"){openPanel(opt.panel);if(opt.next)state.world.pendingNode=opt.next;return}
@@ -1620,7 +1950,8 @@ function render(){
     ((notice||news.length)?`<div class="world-news"><b>江湖风闻与回响</b>${notice?`<p>${esc(notice)}</p>`:""}${news.map(x=>`<p>· ${esc(x.text)}</p>`).join("")}</div>`:"");
   state.world.routeNotice="";
   const del=document.getElementById("deltaLog");del.innerHTML=(state.lastChanges||[]).slice(-6).map(x=>`<span class="delta ${/[+-]-| -/.test(x)?"bad":"good"}">${esc(x)}</span>`).join("");
-  document.getElementById("choices").innerHTML=node.options.map((o,i)=>{
+  const choices=nodeOptions(node,state.node);
+  document.getElementById("choices").innerHTML=choices.map((o,i)=>{
     const c=conditionResult(o.condition), cls=[o.className||"",o.hidden?"hidden-choice":"",!c.ok?"locked":""].join(" ");
     return `<button class="choice-btn ${cls}" data-choice="${i}" ${!c.ok?"disabled":""}>${esc(o.label)}${(!c.ok||o.hidden)?`<small>${esc(!c.ok?c.reason:"隐秘选项已解锁")}</small>`:""}</button>`;
   }).join("");
@@ -1641,7 +1972,9 @@ function startBattle(enemyId,next,context=null){
   const base=ENEMIES[enemyId];if(!base){toast("敌人数据缺失","bad");return}
   const e=deepClone(base), difficulty=context?.difficulty||"normal",repeats=context?.type==="dungeon"?(state.dungeons[context.id]?.clears||0):0,oldMove=Math.min(.24,repeats*.07), mult=(difficulty==="hard"?1.28:difficulty==="extreme"?1.58:1)+oldMove;
   e.hp=Math.round(e.hp*mult);e.hpMax=e.hp;e.attack=Math.round(e.attack*mult);e.defense=Math.round(e.defense*mult);
-  state.battle={enemyId,enemy:e,next,context,phase:1,turn:1,defending:false,observed:false,environmentUsed:false,enemyStatuses:{},playerStatuses:{},log:[`遭遇 ${e.name}。${e.background}`],gauge:0,cooldowns:{},combo:0,core:{soul:20,backlash:0,summons:[],marks:0,gears:0,tide:"退",stance:"明",tones:[],sword:0},ended:false};
+  const partnerId=state.activeRoute&&V6_ROUTE_META[state.activeRoute]?.npc||null,partner=partnerId&&state.relations[partnerId]?.trust>0?partnerId:null;
+  state.battle={enemyId,enemy:e,next,context,phase:1,turn:1,defending:false,observed:false,environmentUsed:false,enemyStatuses:{},playerStatuses:{},log:[`遭遇 ${e.name}。${e.background}`],partner,partnerCooldown:0,gauge:0,cooldowns:{},combo:0,core:{soul:20,backlash:0,summons:[],marks:0,gears:0,tide:"退",stance:"明",tones:[],sword:0},ended:false};
+  if(partner)state.battle.log.push(`${NPCS[partner].name}与你并肩入阵，信任将转化为实际援护。`);
   if(repeats>=2)state.battle.log.push(`旧招识破：这是你第 ${repeats+1} 次挑战，敌人已经针对常用节奏调整招式。`);
   if(state.world.nextBattleBuff){state.battle.playerStatuses.hidden={turns:2,power:20};delete state.world.nextBattleBuff}
   if(enemyId==="weiWuming"&&state.world.allyCall){addStatus(state.battle.enemyStatuses,"weak",3,24);state.battle.log.push("仍信任你的同伴在光幕外回应，魏无明的意志出现裂隙。")}
@@ -1656,7 +1989,7 @@ function renderBattle(){
     <div class="battle-box"><div class="enemy-head"><div class="enemy-icon">敌</div><div><b>${esc(e.name)}</b><small>Lv.${e.level} · ${esc(e.background)}</small></div><span class="phase">${e.boss?`阶段 ${b.phase}`:"交锋"}</span></div>
     <div class="enemy-bar"><i style="width:${clamp(e.hp/e.hpMax*100,0,100)}%"></i></div><div class="enemy-hp-label">${Math.max(0,Math.ceil(e.hp))} / ${e.hpMax}</div>
     <div class="status-row">${statusHtml(b.enemyStatuses)}</div><div class="battle-log">${b.log.slice(-9).map(x=>`<div>${x}</div>`).join("")}</div>
-    <div class="meta-line" style="margin-top:9px"><span class="tag">${esc(school.mechanic.split("：")[0])} ${b.gauge}/100</span><span class="tag">${esc(battleCoreText())}</span><span class="tag">环境 ${b.environmentUsed?"已用":"可用"}</span></div></div>
+    <div class="meta-line" style="margin-top:9px"><span class="tag">${esc(school.mechanic.split("：")[0])} ${b.gauge}/100</span><span class="tag">${esc(battleCoreText())}</span><span class="tag">环境 ${b.environmentUsed?"已用":"可用"}</span>${b.partner?`<span class="tag">助战 ${esc(NPCS[b.partner].name)}</span>`:""}</div></div>
     ${b.ended?renderBattleEnd():`<div class="battle-actions">
       <button class="btn" data-battle="attack">普通攻击</button><button class="btn" data-battle="defend">防御</button>
       <div class="skill-actions">${skills}</div>
@@ -1760,7 +2093,7 @@ function battleAction(type,skillIndex){
     if(hooks.includes("returnBreath")){state.player.stats.mp=clamp(state.player.stats.mp+8,0,totalStats().mpMax);b.log.push("装备词条「回息」令内力回流。")}
     if(hooks.includes("stage_border")&&state.player.stats.hp<totalStats().hpMax*.45){addStatus(b.playerStatuses,"shield",3,Math.round(totalStats().defense*1.8+20));b.log.push("空粮袋战靴踏出旧运粮路，低血状态下生出护送之盾。")}
   }else if(type==="item"){openBattleItems();return}
-  summonsAct();if(checkBattleOutcome())return;
+  summonsAct();partnerAct();if(checkBattleOutcome())return;
   enemyTurn();tickRound();checkBattleOutcome();render();
 }
 function useSkill(sk){
@@ -1803,6 +2136,12 @@ function summonsAct(){
     if(p.temp!==undefined)p.temp--;
   });
   b.core.summons=b.core.summons.filter(p=>p.temp===undefined||p.temp>0);
+}
+function partnerAct(){
+  const b=state.battle;if(!b?.partner||b.ended||b.turn%2!==0)return;
+  const trust=state.relations[b.partner]?.trust||0,name=NPCS[b.partner].name,power=Math.max(8,12+Math.floor(trust/8));
+  if(state.player.stats.hp<totalStats().hpMax*.42){healPlayer(power,`${name}掩护回气`);addStatus(b.playerStatuses,"shield",1,power);b.log.push(`${name}没有抢你的风头，而是替你守住最危险的半步。`)}
+  else{hitEnemy(Math.round(power+totalStats().attack*.22),`${name}并肩一击`,trust>=45?"weak":null)}
 }
 function triggerSchoolMechanic(){
   const b=state.battle,id=state.player.school;b.gauge=0;
@@ -1851,8 +2190,9 @@ function tickRound(){
 function checkBattleOutcome(){
   const b=state.battle;if(!b)return true;
   if(b.enemy.hp<=0){
-    if(b.enemy.phase2&&b.phase===1){
-      b.phase=2;const p=b.enemy.phase2;b.enemy.name=p.name;b.enemy.hp=p.hp;b.enemy.hpMax=p.hp;b.enemy.attack=p.attack;b.enemy.defense=p.defense;b.enemy.moves=p.moves;b.enemy.hint=p.hint;b.enemyStatuses={};b.log.push(`<span class="hint">阶段变化：${esc(p.hint)}</span>`);render();return true;
+    const nextPhase=b.phase===1?b.enemy.phase2:b.phase===2?b.enemy.phase3:null;
+    if(nextPhase){
+      b.phase++;const p=nextPhase;b.enemy.name=p.name;b.enemy.hp=p.hp;b.enemy.hpMax=p.hp;b.enemy.attack=p.attack;b.enemy.defense=p.defense;b.enemy.moves=p.moves;b.enemy.hint=p.hint;b.enemyStatuses={};state.dungeonBossPhase=b.context?.type==="dungeon"?b.phase:state.dungeonBossPhase;b.log.push(`<span class="hint">阶段变化：${esc(p.hint)}</span>`);render();return true;
     }
     b.ended=true;b.victory=true;state.battleWins++;const repeat=b.context?.type==="dungeon"?(state.dungeons[b.context.id]?.clears||0):0,rewardRate=b.context?.type==="dungeon"?[1,.4,.15,0][Math.min(3,repeat)]:1;state.player.stats.xp+=Math.round((35+b.enemy.level*12)*rewardRate);state.player.stats.cultivation+=Math.round((20+b.enemy.level*6)*(rewardRate||.12));
     state.player.stats.hp=clamp(state.player.stats.hp+18,1,totalStats().hpMax);state.player.stats.mp=clamp(state.player.stats.mp+15,0,totalStats().mpMax);
@@ -1938,6 +2278,38 @@ const DUNGEON_CHAMBERS={
     ["第十二驿总钟","总钟能让天下同时听见一句话，钟楼下却挤满互不相信的人。叶双白的五份错图正把追兵引向不同出口。"]
   ]
 };
+Object.assign(DUNGEON_CHAMBERS,{
+  fengleWarehouse:[
+    ["仓外雨棚","雨声盖住巡哨脚步。三辆假押银车停在门口，车辙却有一辆通往地下水门。"],
+    ["苦役账台","改账苦役用米粒摆出守卫换班。救他们离开会少一名带路人，却多一群愿作证的人。"],
+    ["吊灯货廊","火油吊灯与货网相连，剪错一根绳便会封死后路。"],
+    ["随机库房","红木匣、官印箱与空棺随机换位，幸运和前房情报决定先找到什么。"],
+    ["押银秤厅","校尉要求当场验箱。假身份、正面交锋与破坏秤台都能过关，代价不同。"],
+    ["暗格休整","燕七娘留下半壶水和一张只画退路的地图。可恢复，也可冒险拆开隐藏夹层。"],
+    ["火起账阁","周千户暗桩纵火。你必须在主卷、囚门与追敌路线之间完成最后一次选择。"]
+  ],
+  blackManeRanch:[
+    ["惊马外栏","万马受毒草刺激冲栏，先安马还是追放毒人会改变后续房间。"],["马掌作坊","新打马掌里藏着黑市分账，炉火却被人反锁。"],["草料迷仓","三批草料只有一批无毒，韩钟教你从气味与马耳判断。"],["雪沟随机道","风雪改了旧路，可能遇到走失马驹、朔庭斥候或天策留下的断枪印。"],["木栏擂台","天策按马场旧规赌一局，不杀也能过关。"],["暖厩休整","照料受伤黑鬃马会让它在首领战冲开一次阵线。"],["主厩火夜","卖马名册绑在头马颈下，王景策的人正点燃整座马场。"]
+  ],
+  dragonKingShip:[
+    ["贴水龙骨","暗流把人推向铜钉，船底却有船工敲出的求救节拍。"],["压舱底舱","金银压舱石锁住逃生门，搬走会让旗舰倾斜。"],["换旗长廊","每一面旗都代表不同身份，选错便被旧部认作敌人。"],["随机宴舱","可能遇到鸿门酒、哗变船工或唐云栖旧友。"],["火帆绞盘","俘虏锁链与火帆共用绞盘，强拆会烧下舱。"],["龙王小灶","杯中酒留下不含酒的水壶，喝下可清状态，也会触发一段旧债。"],["主舱母契","沈家暗桩、孟沧浪与船工同时争夺母契，首领就在门后。"]
+  ],
+  brokenSwordValley:[
+    ["第一断剑","残剑重演护粮农夫的一式，接招和理解招意是两条路。"],["风穴剑鸣","十一种剑鸣混在一起，只有一种在给失踪弟子指路。"],["落石藤桥","救人会失去追踪抄录者的先机，追人则桥下有人求救。"],["随机剑冢","每次挑战会换一位败者旧招，也可能出现隐藏药泉。"],["百招石壁","照抄可得增益，写下收势则削弱后续机关。"],["空鞘休整","裘明岫与你交换一段真实败招，伙伴信任会转化为战斗援护。"],["无隙演武","机关复制你最常用技能，但无法理解为何有人为旁人收剑。"]
+  ],
+  blackWindFort:[
+    ["鹰哨后崖","攀崖可避正门，却会撞见守蛋的巨鹰与偷蛋奇侠暗号。"],["假货关卡","商队货单有三处破绽，补哪一处会决定山贼把你当谁。"],["饥民粮棚","寨粮只够两日，释放囚犯意味着更多人分粮。"],["随机悬赏房","十七张悬赏每次亮起不同三张，可能是友军、假名或你自己。"],["擂台夺旗","赢不难，难的是按寨规不伤被迫守台的人。"],["破庙小灶","何三煮了一锅难喝的粥，可恢复并听一条跨章传闻。"],["信库火道","原信、赎金账和避难名单分在三柜，火只给你救两柜的时间。"]
+  ]
+});
+["blankArchive","yanmenFort","mirrorLake","qingyaTrial","twelveStations"].forEach(id=>{
+  const tail=[
+    ["随机岔室","旧机关按本次路线重排，可能出现精英、隐藏房或一段伙伴往事。"],
+    ["精英关","守关者会针对你前面最常用的办法行动，换一种思路更有利。"],
+    ["营火歇脚","可恢复少量状态并与伙伴谈一次真正影响信任的私话。"],
+    ["隐藏侧室","情报、幸运、特殊物品或流派能力足够时才能进入。"]
+  ];
+  if(DUNGEON_CHAMBERS[id]&&DUNGEON_CHAMBERS[id].length<7)DUNGEON_CHAMBERS[id]=[...DUNGEON_CHAMBERS[id].slice(0,2),...tail.slice(0,4),DUNGEON_CHAMBERS[id][2]];
+});
 
 function openDungeon(id){
   const d=DUNGEONS[id];if(!d)return;
@@ -1955,13 +2327,15 @@ function chooseDungeonRoute(id,difficulty){
 }
 function beginDungeon(id,difficulty,route){
   const d=DUNGEONS[id];closeModal();state.world.currentDungeon=d.name;
-  state.dungeonRun={id,difficulty,route,stage:0,score:0,intel:0,aid:0,force:0,hidden:false};
+  state.dungeonId=id;state.dungeonDifficulty=difficulty;state.dungeonRoute=route;state.dungeonStage=0;state.dungeonRoom=0;state.dungeonBossPhase=0;state.dungeonScore=0;state.dungeonReturnNode=state.world.routeDungeonNext||state.node;
+  state.dungeonRun={id,difficulty,route,stage:0,score:0,intel:0,aid:0,force:0,hidden:false,rooms:(DUNGEON_CHAMBERS[id]||[]).length,returnNode:state.dungeonReturnNode};
   renderDungeonRoom();
 }
 function renderDungeonRoom(){
   const run=state.dungeonRun;if(!run)return;
   const d=DUNGEONS[run.id],route=d.routes.find(x=>x.id===run.route)||d.routes[0],room=(DUNGEON_CHAMBERS[run.id]||[])[run.stage]||[`未知房间 ${run.stage+1}`,d.desc];
-  showModal(`${d.name} · 第 ${run.stage+1}/3 室`,`<div class="chapter-kicker">${esc(route.name)} · ${esc(route.env)}</div><h2>${esc(room[0])}</h2><p>${esc(room[1])}</p>
+  const total=(DUNGEON_CHAMBERS[run.id]||[]).length||3;
+  showModal(`${d.name} · 第 ${run.stage+1}/${total} 室`,`<div class="chapter-kicker">${esc(route.name)} · ${esc(route.env)}</div><h2>${esc(room[0])}</h2><p>${esc(room[1])}</p>
     <div class="meta-line"><span class="tag">情报 ${run.intel}</span><span class="tag">援护 ${run.aid}</span><span class="tag">破阵 ${run.force}</span></div>
     <div class="list">
       <button class="choice-btn" data-dstep="inspect"><b>停下查清机关与证词</b><small>获得情报，可能发现隐藏房；首领观察更有利。</small></button>
@@ -1984,9 +2358,11 @@ function dungeonStep(choice){
     if(s.energy===0){const cost=Math.round(4*hard);s.hp=Math.max(1,s.hp-cost);toast(`精力耗尽，强行破阵又损失 ${cost} 气血。`,"bad")}else toast(`抢过一道机关，精力 -${energy}。`,"good");
   }
   run.stage++;autoSave();
-  if(run.stage<3){renderDungeonRoom();return}
+  state.dungeonStage=run.stage;state.dungeonRoom=run.stage;state.dungeonScore=run.score;
+  const total=(DUNGEON_CHAMBERS[run.id]||[]).length||3;
+  if(run.stage<total){renderDungeonRoom();return}
   const d=DUNGEONS[run.id],route=run.route,difficulty=run.difficulty,expedition={score:run.score,intel:run.intel,aid:run.aid,force:run.force,hidden:run.hidden};
-  state.dungeonRun=null;closeModal();
+  state.dungeonRun=null;state.dungeonBossPhase=1;closeModal();
   if(run.id==="rainTemple"&&route==="question")state.world.bossEvidence=true;
   if(run.id==="mirrorLake"&&state.player.school==="canglan")state.world.nextBattleBuff="hidden";
   startBattle(d.enemy,state.node,{type:"dungeon",id:run.id,difficulty,route,expedition});
@@ -1997,19 +2373,26 @@ function dungeonStep(choice){
 }
 function completeDungeon(id,difficulty,route,turns,expedition=null){
   const d=DUNGEONS[id];state.world.currentDungeon=null;
+  state.dungeonId=null;state.dungeonDifficulty=null;state.dungeonRoute=null;state.dungeonStage=0;state.dungeonRoom=0;state.dungeonBossPhase=0;state.dungeonScore=0;state.dungeonReturnNode=null;
   const rec=state.dungeons[id]||(state.dungeons[id]={clears:0,best:null,intel:0}),before=rec.clears,first=before===0;rec.clears++;rec.intel+=2;rec.routes=Array.from(new Set([...(rec.routes||[]),route]));
   const expeditionScore=expedition?.score||0;
   const grade=turns<=6&&expeditionScore>=5?"甲":turns<=10||expeditionScore>=4?"乙":"丙";if(!rec.best||["甲","乙","丙"].indexOf(grade)<["甲","乙","丙"].indexOf(rec.best))rec.best=grade;
   const qBase=difficulty==="extreme"?5:difficulty==="hard"?4:2,slot=rand(0,8),gearChance=before===0?1:before===1?.55:before===2?.2:0;
   if(chance(gearChance))addEquipment(`eq_${slot}_${clamp(qBase+rand(-1,1),0,6)}`);
+  if(state.skills?.legacy){state.skills.legacy.temper=(state.skills.legacy.temper||0)+(first?2:1);const newStage=Math.min(6,Math.floor(state.skills.legacy.temper/3));if(newStage>state.skills.legacy.stage){state.skills.legacy.stage=newStage;state.lastChanges.push(`传承兵器进阶至 ${newStage}/6 阶`)}}
   addItem(["herb","silk","iron","page"][rand(0,3)],before>=3?1:rand(1,3));state.player.stats.wealth+=Math.round((difficulty==="extreme"?180:difficulty==="hard"?100:55)*([1,.5,.25,.12][Math.min(3,before)]));
-  if(first){if(d.routeGear)addEquipment(d.routeGear);addItem("page",2);state.player.stats.wealth+=100;toast(`首次通关：获得${d.routeGear?EQUIPMENT_DB[d.routeGear].name+"、":""}武学残页 ×2。`,"good")}
+  if(first){
+    const owned=new Set([...state.inventory.equipment,...Object.values(state.gear).filter(Boolean),...state.inventory.warehouse].map(x=>x.id));
+    let guaranteed=d.routeGear&&!owned.has(d.routeGear)?d.routeGear:Object.keys(EQUIPMENT_DB).find(k=>!owned.has(k)&&["绝品","百炼"].includes(EQUIPMENT_DB[k].quality));
+    if(guaranteed)addEquipment(guaranteed);addItem("page",2);state.player.stats.wealth+=100;rec.firstReward=guaranteed||null;
+    toast(`首次通关：获得${guaranteed?EQUIPMENT_DB[guaranteed].name+"、":""}武学残页 ×2。`,"good")
+  }
   const ach={rainTemple:"rainTemple",mirrorLake:"mirrorLake",yanmenFort:"yanmenFort",tianjiVault:"tianjiVault"}[id]||`dungeon_${id}`;unlockAchievement(ach);
   if(id==="rainTemple"&&route==="question"&&grade==="甲")unlockAchievement("d_secret_rain");
   if(id==="mirrorLake"&&route==="dive"&&difficulty==="extreme"&&hasItem("lantern"))unlockAchievement("d_secret_lake");
   if(id==="yanmenFort"&&route==="infiltrate"&&hasItem("oldArrow"))unlockAchievement("d_secret_fort");
   if(id==="tianjiVault"&&route==="chaos"&&(state.world.hiddenRooms||0)>0)unlockAchievement("d_secret_vault");
-  showModal("副本结算",`<div class="ending-seal">${grade}等</div><h2>${esc(d.name)}</h2><p>路线：${esc(d.routes.find(r=>r.id===route)?.name||route)} · 首领回合：${turns} · 难度：${difficulty==="normal"?"普通":difficulty==="hard"?"困难":"绝境"}</p>${expedition?`<p>三室履历：情报 ${expedition.intel} · 援护 ${expedition.aid} · 破阵 ${expedition.force}${expedition.hidden?" · 发现隐藏房":""}。这些行动已实际改变首领战。</p>`:""}<p>${first&&d.routeGear?`首通专属装备「${esc(EQUIPMENT_DB[d.routeGear].name)}」已放入背包，可在下一幕直接穿戴。`:"本次保留了路线情报与递减后的材料收益。"}失败和重复挑战都会被世界记住。</p><button class="btn primary" id="dungeonDone">${state.world.routeDungeonNext?"带着战利品继续剧情":"返回江湖"}</button>`);
+  showModal("副本结算",`<div class="ending-seal">${grade}等</div><h2>${esc(d.name)}</h2><p>路线：${esc(d.routes.find(r=>r.id===route)?.name||route)} · 首领回合：${turns} · 难度：${difficulty==="normal"?"普通":difficulty==="hard"?"困难":"绝境"}</p>${expedition?`<p>副本履历：情报 ${expedition.intel} · 援护 ${expedition.aid} · 破阵 ${expedition.force}${expedition.hidden?" · 发现隐藏房":""}。这些行动已实际改变首领战。</p>`:""}<p>${first&&rec.firstReward?`首通保底装备「${esc(EQUIPMENT_DB[rec.firstReward].name)}」已放入背包，可在下一幕直接穿戴。`:"本次保留了路线情报与递减后的材料收益。"}失败和重复挑战都会被世界记住。</p><button class="btn primary" id="dungeonDone">${state.world.routeDungeonNext?"带着战利品继续剧情":"返回江湖"}</button>`);
   document.getElementById("dungeonDone").onclick=()=>{const next=state.world.routeDungeonNext;delete state.world.routeDungeonNext;closeModal();if(next)enterNode(next);else render()};checkAchievements();autoSave();
 }
 
@@ -2059,8 +2442,14 @@ function startNewGamePlus(){
 
 function openPanel(name){
   if(!state&&name!=="archive"){openArchive();return}
-  const panels={character:renderCharacter,inventory:renderInventory,equipment:renderEquipment,skills:renderSkills,quests:renderQuests,relations:renderRelations,fort:renderFort,achievements:renderAchievements,settings:renderSettings,archive:openArchive};
+  const panels={character:renderCharacter,inventory:renderInventory,equipment:renderEquipment,skills:renderSkills,quests:renderQuests,dungeons:renderDungeonHall,relations:renderRelations,fort:renderFort,achievements:renderAchievements,settings:renderSettings,archive:openArchive};
   if(panels[name])panels[name]();
+}
+function renderDungeonHall(){
+  const ids=Object.keys(DUNGEONS).sort((a,b)=>(DUNGEONS[a].routeId&&NORMAL_ROUTE_IDS.includes(DUNGEONS[a].routeId)?-1:1));
+  showModal("副本大厅",`<p class="continue-note">副本拥有路线、房间进度、随机事件、隐藏房、营火、精英与多阶段首领。首通必得未收集的路线装备；重复收益按 100% / 40% / 15% / 0% 递减，失败保留情报。</p>
+  <div class="list">${ids.map(id=>{const d=DUNGEONS[id],r=state.dungeons[id]||{clears:0,best:null,intel:0};return`<div class="list-card"><h3>${esc(d.name)}</h3><div class="meta-line"><span class="tag">${esc(d.rec)}</span><span class="tag">${d.routeId&&V6_ROUTE_META[d.routeId]?esc(V6_ROUTE_META[d.routeId].name):"江湖副本"}</span><span class="tag">通关 ${r.clears}</span><span class="tag">最佳 ${r.best||"—"}</span></div><p>${esc(d.desc)}</p><p>路线：${d.routes.map(x=>esc(x.name)).join(" / ")}<br>首领：${esc(ENEMIES[d.enemy]?.name||"未知")} · 房间：${(DUNGEON_CHAMBERS[id]||[]).length}<br>掉落：${d.drops.map(esc).join("、")}</p><button class="btn small" data-hall-dungeon="${id}">查看并挑战</button></div>`}).join("")}</div>`);
+  document.querySelectorAll("[data-hall-dungeon]").forEach(b=>b.onclick=()=>openDungeon(b.dataset.hallDungeon));
 }
 function showModal(title,html){document.getElementById("modalTitle").textContent=title;document.getElementById("modalBody").innerHTML=html;document.getElementById("modalWrap").classList.remove("hidden")}
 function closeModal(){document.getElementById("modalWrap").classList.add("hidden");if(state?.world.pendingNode){const n=state.world.pendingNode;delete state.world.pendingNode;enterNode(n)}}
@@ -2157,7 +2546,9 @@ function storeEq(uid){const i=state.inventory.equipment.findIndex(x=>x.uid===uid
 function withdrawEq(uid){if(itemSlotsUsed()>=state.inventory.capacity){toast("行囊已满。","bad");return}const i=state.inventory.warehouse.findIndex(x=>x.uid===uid);if(i<0)return;state.inventory.equipment.push(state.inventory.warehouse[i]);state.inventory.warehouse.splice(i,1);autoSave();renderFort()}
 function compareEq(uid){const eq=findEq(uid),b=EQUIPMENT_DB[eq.id],old=state.gear[b.slot];showModal("装备对比",`<div class="panel-grid"><div>${equipmentCard(eq,false)}</div><div>${old?equipmentCard(old,false):`<div class="empty">该部位尚未穿戴</div>`}</div></div><p>评分差：${equipmentScore(eq)-(old?equipmentScore(old):0)>=0?"+":""}${equipmentScore(eq)-(old?equipmentScore(old):0)}</p>`);bindInventoryActions()}
 function renderEquipment(){
-  const sets=setCounts();showModal("装备",`<div class="list">${SLOTS.map(slot=>state.gear[slot]?equipmentCard(state.gear[slot],false):`<div class="list-card"><h3>${slot}</h3><p>尚未穿戴</p></div>`).join("")}</div>
+  const sets=setCounts(),legacy=state.skills.legacy,names=LEGACY_WEAPONS[state.player.school];showModal("装备",`<div class="list">${SLOTS.map(slot=>state.gear[slot]?equipmentCard(state.gear[slot],false):`<div class="list-card"><h3>${slot}</h3><p>尚未穿戴</p></div>`).join("")}</div>
+  <h3 class="section-title">传承兵器</h3><div class="list-card"><h3>${legacy.stage>=4?names[1]:names[0]} · ${legacy.stage}/6 阶</h3><p>传承兵器随主心法、路线选择与副本磨砺成长。当前磨砺 ${legacy.temper}/18；四阶改变外形与机制，六阶领悟流派终式。九灵的上限最高，但魂契反噬仍会真实伤及经脉。</p><div class="progress-line"><i style="width:${Math.min(100,legacy.temper/18*100)}%"></i></div></div>
+  <h3 class="section-title">装备图鉴</h3><p>数据库 ${Object.keys(EQUIPMENT_DB).length} 件 · 本周目见过 ${state.itemsFound} 件物品 · 百炼与神兵拥有机制词条、玉孔、共鸣和路线器魂。</p>
   <h3 class="section-title">套装效果</h3><div class="list">${Object.entries(SETS).map(([id,set])=>`<div class="list-card"><h3>${set.name} · ${sets[id]||0}/6</h3><p>2件：${set.two}<br>4件：${set.four}<br>6件：${set.six}</p></div>`).join("")}</div>`);bindInventoryActions()
 }
 function renderSkills(){
@@ -2166,13 +2557,18 @@ function renderSkills(){
   showModal("武学",`<div class="list-card"><h3>${sc.name} · ${sc.role}</h3><p>${sc.mechanic}</p><div class="meta-line"><span class="tag">武学点 ${ss.points}</span><span class="tag">出战 ${ss.equipped.length}/4</span><span class="tag">进阶 ${esc(branch||"未定")}</span></div><p>成长：${esc(sc.growth)}。升级获得武学点；达到等级、境界并完成前置招式后方可研习。战斗使用会提高熟练度。</p></div>
   <h3 class="section-title">主动招式</h3><div class="list">${sc.skills.map((sk,i)=>{const learned=ss.learned.includes(sk.id),equipped=ss.equipped.includes(sk.id),prev=i===0||ss.learned.includes(sc.skills[i-1].id),ready=state.player.level>=sk.level&&state.player.realm>=sk.realm&&prev,cost=sk.ultimate?2:1,master=ss.mastery[sk.id]||0;return`<div class="list-card"><h3>${sk.ultimate?"绝学 · ":""}${esc(sk.name)}</h3><div class="meta-line"><span class="tag">Lv.${sk.level}</span><span class="tag">${REALMS[sk.realm]}</span><span class="tag">熟练 ${master}/10</span>${equipped?`<span class="tag">已配置</span>`:""}</div><p>${skillDesc(sk)}<br>消耗 ${sk.cost} 内力 · 威力 ${sk.power} · 冷却 ${sk.cooldown}</p><div class="card-actions">${learned?`<button class="btn small" data-equip-skill="${sk.id}">${equipped?"卸下":"配置"}</button>`:`<button class="btn small" data-learn-skill="${sk.id}" ${!ready||ss.points<cost?"disabled":""}>研习（${cost}点）</button>`}${!ready&&!learned?`<span class="tag">需 Lv.${sk.level}、${REALMS[sk.realm]}${prev?"":"、前置招式"}</span>`:""}</div></div>`}).join("")}</div>
   <h3 class="section-title">进阶路线</h3><div class="panel-grid">${sc.branches.map((x,i)=>`<button class="choice-card ${ss.branch===(i?"right":"left")?"selected":""}" data-branch="${i?"right":"left"}" ${ss.branch||state.player.level<6?"disabled":""}><b>${esc(x)}</b><span>${i?"强化进攻、状态与终结":"强化生存、资源与持续作战"}</span></button>`).join("")}</div>
-  <h3 class="section-title">经脉与内功</h3><div class="card-actions">${[["ren","任脉","气血与治疗"],["du","督脉","攻击与会心"],["chong","冲脉","内力与控制"]].map(x=>`<button class="btn small" data-meridian="${x[0]}">${x[1]} ${ss.meridians[x[0]]}/5<br>${x[2]}（修为 ${80+(ss.meridians[x[0]]||0)*60}）</button>`).join("")}</div>
+  <h3 class="section-title">心法、轻功与秘术</h3>
+  <div class="list-card"><h3>主心法 · ${HEART_METHODS[state.player.school].name}</h3><p>${HEART_METHODS[state.player.school].desc}</p><div class="meta-line"><span class="tag">${ss.heartMethods.main.level}/10 重</span><span class="tag">传承兵器 ${ss.legacy.stage}/6 阶</span></div><button class="btn small" data-heart-train="main">参悟主心法（残页1·修为${120+ss.heartMethods.main.level*80}）</button></div>
+  <div class="panel-grid">${Object.entries(COMMON_HEARTS).map(([id,h])=>`<button class="choice-card ${ss.heartMethods[h.slot]?.id===id?"selected":""}" data-heart-equip="${id}"><b>${h.name}</b><span>${h.desc}<br>${h.slot==="assist"?"辅心法":h.slot==="qinggong"?"轻功":"秘术"}</span></button>`).join("")}</div>
+  <h3 class="section-title">六脉行气</h3><div class="card-actions">${[["ren","任脉","气血与治疗"],["du","督脉","攻击与会心"],["chong","冲脉","内力与命中"],["dai","带脉","防御与精力"],["yinwei","阴维脉","治疗与抗性"],["yangwei","阳维脉","身法与破防"]].map(x=>`<button class="btn small" data-meridian="${x[0]}">${x[1]} ${ss.meridians[x[0]]}/10<br>${x[2]}（修为 ${80+(ss.meridians[x[0]]||0)*60}）</button>`).join("")}</div>
   <h3 class="section-title">被动天赋</h3><div class="list">${sc.passives.map(x=>`<div class="list-card"><p>${esc(x)}</p></div>`).join("")}</div><h3 class="section-title">专属江湖事件</h3><p>${esc(sc.event)}</p><span class="tag">限定成就：${esc(sc.achievement)}</span><br><button class="btn primary" id="schoolEvent" style="margin-top:12px" ${state.player.level<4||state.world.schoolEventDone?"disabled":""}>${state.world.schoolEventDone?"心契已定":"赴流派心契"}</button>`);
   document.getElementById("schoolEvent").onclick=openSchoolEvent;
   document.querySelectorAll("[data-learn-skill]").forEach(b=>b.onclick=()=>learnSkill(b.dataset.learnSkill));
   document.querySelectorAll("[data-equip-skill]").forEach(b=>b.onclick=()=>toggleSkill(b.dataset.equipSkill));
   document.querySelectorAll("[data-branch]").forEach(b=>b.onclick=()=>chooseBranch(b.dataset.branch));
   document.querySelectorAll("[data-meridian]").forEach(b=>b.onclick=()=>trainMeridian(b.dataset.meridian));
+  document.querySelectorAll("[data-heart-train]").forEach(b=>b.onclick=()=>trainHeartMethod(b.dataset.heartTrain));
+  document.querySelectorAll("[data-heart-equip]").forEach(b=>b.onclick=()=>equipHeartMethod(b.dataset.heartEquip));
 }
 function learnSkill(id){
   const ss=state.skills,sc=SCHOOLS[state.player.school],sk=sc.skills.find(x=>x.id===id),i=sc.skills.indexOf(sk),cost=sk?.ultimate?2:1;
@@ -2187,10 +2583,21 @@ function chooseBranch(branch){
   if(state.skills.branch||state.player.level<6)return;state.skills.branch=branch;state.skills.points+=1;addHistory(`选定${SCHOOLS[state.player.school].branches[branch==="right"?1:0]}进阶路线。`);toast("进阶路线已定，获得一枚武学点。","good");autoSave();renderSkills();
 }
 function trainMeridian(id){
-  const ss=state.skills,rank=ss.meridians[id]||0,cost=80+rank*60;if(rank>=5){toast("此脉已行至圆满。");return}if(state.player.stats.cultivation<cost){toast(`需要修为 ${cost}`,"bad");return}
+  const ss=state.skills,rank=ss.meridians[id]||0,cost=80+rank*60;if(rank>=10){toast("此脉已行至圆满。");return}if(rank>=6&&!state.world.schoolEventDone){toast("六重之后需完成流派心契。","bad");return}if(state.player.stats.cultivation<cost){toast(`需要修为 ${cost}`,"bad");return}
   state.player.stats.cultivation-=cost;ss.meridians[id]=rank+1;
   if(id==="ren"){state.player.stats.hpMax+=8;state.player.stats.healing+=1}if(id==="du"){state.player.stats.attack+=2;state.player.stats.crit+=1}if(id==="chong"){state.player.stats.mpMax+=6;state.player.stats.hit+=1}
+  if(id==="dai"){state.player.stats.defense+=2;state.player.stats.energyMax+=4}if(id==="yinwei"){state.player.stats.healing+=1;state.player.stats.hpMax+=4}if(id==="yangwei"){state.player.stats.agility+=1;state.player.stats.break+=1}
   toast("行气一周天，经脉更进一步。","good");autoSave();renderSkills();
+}
+function trainHeartMethod(){
+  const h=state.skills.heartMethods.main;if(h.level>=10){toast("主心法已至十重。");return}
+  const cost=120+h.level*80;if(getItemCount("page")<1||state.player.stats.cultivation<cost){toast(`需要武学残页 ×1 与修为 ${cost}`,"bad");return}
+  addItem("page",-1);state.player.stats.cultivation-=cost;h.level++;state.player.stats.hpMax+=5;state.player.stats.attack+=1;
+  if(h.level===6){state.skills.points++;state.skills.legacy.stage=Math.max(1,state.skills.legacy.stage);toast("心法六重：机制变化与传承兵器第一阶已开启。","good")}else toast(`主心法参悟至第 ${h.level} 重。`,"good");
+  autoSave();renderSkills();
+}
+function equipHeartMethod(id){
+  const h=COMMON_HEARTS[id];if(!h)return;state.skills.heartMethods[h.slot]={id,level:1};toast(`已配置 ${h.name}`,"good");autoSave();renderSkills();
 }
 function openSchoolEvent(){
   if(state.player.level<4||state.world.schoolEventDone)return;
@@ -2267,10 +2674,12 @@ function renderAchievements(tab="全部"){
   document.querySelectorAll("[data-atab]").forEach(b=>b.onclick=()=>renderAchievements(b.dataset.atab))
 }
 function renderSettings(){
+  const validation=runAllValidators();
   showModal("设置与存档",`<div class="list">
   <div class="list-card"><h3>阅读设置</h3><label class="field">字号 <input id="fontRange" type="range" min="14" max="21" value="${state.settings.font}"></label><label><input id="motionToggle" type="checkbox" ${state.settings.reduceMotion?"checked":""}> 减少动态效果</label><br><label><input id="soundToggle" type="checkbox" ${state.settings.sound?"checked":""}> 开启轻提示音</label><br><label><input id="randomToggle" type="checkbox" ${state.settings.randomEncounters?"checked":""}> 开启随机战斗</label></div>
   <div class="list-card"><h3>存档</h3><div class="card-actions"><button class="btn small" data-save-slot="1">保存一</button><button class="btn small" data-load-slot="1">读取一</button><button class="btn small" data-save-slot="2">保存二</button><button class="btn small" data-load-slot="2">读取二</button><button class="btn small" data-save-slot="3">保存三</button><button class="btn small" data-load-slot="3">读取三</button></div><p>自动存档会在每次重要选择、战斗与物品变化后更新。</p></div>
   <div class="list-card"><h3>分享与迁移</h3><div class="card-actions"><button class="btn small" id="exportSave">导出存档文本</button><button class="btn small" id="importSave">导入存档文本</button><button class="btn small" id="copySummary">复制当前冒险摘要</button></div></div>
+  <div class="list-card"><h3>V6 数据自检 · ${validation.ok?"全部通过":"发现问题"}</h3><p>${validation.ok?"剧情目标、路线隔离、副本返回、结局、装备、技能与完整存档结构均已通过校验。":validation.errors.slice(0,8).map(esc).join("<br>")}</p></div>
   <div class="list-card"><button class="btn danger" id="restartGame">重新开始本周目</button></div></div>`);
   document.getElementById("fontRange").oninput=e=>{state.settings.font=Number(e.target.value);applySettings();autoSave()};
   document.getElementById("motionToggle").onchange=e=>{state.settings.reduceMotion=e.target.checked;applySettings();autoSave()};
@@ -2282,7 +2691,7 @@ function renderSettings(){
   document.getElementById("restartGame").onclick=()=>{if(confirm("确定放弃当前周目并重新创建角色？已解锁成就与结局会保留。"))showCreator(true)};
 }
 function openArchive(){
-  const ends=Object.entries(ENDINGS);showModal("江湖图鉴",`<p>已解锁结局与路线章回 ${meta.endings.length}/${ends.length} · 完整长线 ${(meta.routes||[]).length}/9 · 成就 ${meta.achievements.length}/${ACHIEVEMENTS.length} · 完成周目 ${meta.runs}</p><h3 class="section-title">结局与章回图鉴</h3><div class="list">${ends.map(([id,e])=>{const got=meta.endings.includes(id);return`<div class="list-card"><h3>${got?esc(e.name):"未题名的结局或章回"}</h3><p>${got?esc(e.desc):esc(e.hint)}</p></div>`}).join("")}</div>`)
+  const ends=Object.entries(ENDINGS),normalDone=NORMAL_ROUTE_IDS.filter(id=>(meta.routes||[]).includes(id)).length;showModal("江湖图鉴",`<p>已解锁结局与路线章回 ${meta.endings.length}/${ends.length} · V6完整长线 ${normalDone}/5 · 成就 ${meta.achievements.length}/${ACHIEVEMENTS.length} · 完成周目 ${meta.runs}</p><h3 class="section-title">结局与章回图鉴</h3><div class="list">${ends.map(([id,e])=>{const got=meta.endings.includes(id);return`<div class="list-card"><h3>${got?esc(e.name):"未题名的结局或章回"}</h3><p>${got?esc(e.desc):esc(e.hint)}</p></div>`}).join("")}</div>`)
 }
 function applySettings(){
   const st=state?.settings||{font:16,reduceMotion:false};document.documentElement.style.setProperty("--fs",`${st.font}px`);document.body.classList.toggle("reduce-motion",!!st.reduceMotion)
@@ -2298,9 +2707,11 @@ function reviveState(data){
   if(!data||!data.player||!data.inventory||!data.world||!data.version||data.version>VERSION)throw new Error("存档格式不兼容");
   data=deepClone(data);
   const fresh=freshState(),school=data.player.school||"tieyi";state=Object.assign(fresh,data);state.version=VERSION;state.player=Object.assign(fresh.player,data.player);state.player.stats=Object.assign(fresh.player.stats,data.player.stats||{});state.settings=Object.assign(fresh.settings,data.settings||{});
+  state.routeBranch=Object.assign({},data.routeBranch||{});state.routeFlags=Object.assign({},data.routeFlags||{});state.routeCompleted=Array.from(new Set(data.routeCompleted||data.routes?.completed||[]));state.routeEnding=Object.assign({},data.routeEnding||data.routes?.outcomes||{});
   state.relations=Object.assign(defaultRelations(),data.relations||{});state.gear=Object.assign(blankGear(),data.gear||{});state.fort=Object.assign(fresh.fort,data.fort||{});state.world=Object.assign(fresh.world,data.world||{});state.world.entered=state.world.entered||{};state.world.gamblers=Object.assign(fresh.world.gamblers,data.world.gamblers||{});
   state.routes=Object.assign(defaultRouteState(),data.routes||{});state.routes.tendencies=Object.assign(defaultRouteState().tendencies,data.routes?.tendencies||{});state.routes.progress=Object.assign(defaultRouteState().progress,data.routes?.progress||{});state.routes.urgency=Object.assign(defaultRouteState().urgency,data.routes?.urgency||{});state.routes.outcomes=Object.assign({},data.routes?.outcomes||{});state.routes.seeds=state.routes.seeds||[];state.routes.rumors=state.routes.rumors||[];state.routes.completed=state.routes.completed||[];
-  state.skills=Object.assign(defaultSkillState(school),data.skills||{});state.skills.mastery=Object.assign({},data.skills?.mastery||{});state.skills.meridians=Object.assign({ren:0,du:0,chong:0},data.skills?.meridians||{});
+  state.skills=Object.assign(defaultSkillState(school),data.skills||{});state.skills.mastery=Object.assign({},data.skills?.mastery||{});state.skills.meridians=Object.assign({ren:0,du:0,chong:0,dai:0,yinwei:0,yangwei:0},data.skills?.meridians||{});
+  state.skills.heartMethods=Object.assign(defaultSkillState(school).heartMethods,data.skills?.heartMethods||{});state.skills.legacy=Object.assign(defaultSkillState(school).legacy,data.skills?.legacy||{});
   const valid=new Set(SCHOOLS[school]?.skills.map(x=>x.id)||[]);state.skills.learned=(state.skills.learned||[]).filter(x=>valid.has(x));state.skills.equipped=(state.skills.equipped||[]).filter(x=>valid.has(x)).slice(0,4);
   if(!state.skills.learned.length){const d=defaultSkillState(school);state.skills.learned=d.learned;state.skills.equipped=d.equipped}
   const normalizeEq=eq=>{if(!eq)return eq;eq.durability=eq.durability??100;eq.affixes=eq.affixes||{};eq.sockets=eq.sockets||[];eq.socketMax=eq.socketMax??(QUALITIES.indexOf(EQUIPMENT_DB[eq.id]?.quality)>=5?2:QUALITIES.indexOf(EQUIPMENT_DB[eq.id]?.quality)>=3?1:0);eq.reforges=eq.reforges||0;eq.resonance=eq.resonance||0;return eq};
@@ -2313,6 +2724,13 @@ function reviveState(data){
       const rid=oldRoute[1],outcome=Number(oldRoute[2]);state.currentEnding=null;state.routes.completed=state.routes.completed.filter(x=>x!==rid);state.routes.outcomes[rid]=outcome;state.routes.progress[rid]=5;state.node=`route_${rid}_5`;state.battle=null;
     }
   }
+  if(data.version<6){
+    state.lastChanges=["旧存档已迁移至江湖纪元 V6","五条普通主线已改为二十四幕长篇，原有装备与关系均保留"];state.skills.points+=3;state.world.migratedToV6=true;
+    if(state.node?.startsWith("route_")){
+      const match=state.node.match(/^route_(law|border|trade|martial|message)_(\d+)$/);
+      if(match){state.activeRoute=match[1];state.routeLocked=true;state.routeNode=Number(match[2]);state.routeChapter=state.routeNode+1}
+    }
+  }
   return state;
 }
 function loadAuto(){try{reviveState(JSON.parse(localStorage.getItem(SAVE_KEY)));showGame();toast("已读取自动存档。","good")}catch(e){toast("没有可读取的自动存档。","bad")}}
@@ -2321,14 +2739,46 @@ function manualLoad(slot){try{reviveState(JSON.parse(localStorage.getItem(SLOT_P
 function encodeSave(data){return btoa(unescape(encodeURIComponent(JSON.stringify(data))))}
 function decodeSave(text){return JSON.parse(decodeURIComponent(escape(atob(text.trim()))))}
 function exportSave(){const text=encodeSave({kind:"汴河夜雨存档",version:VERSION,state,meta});showModal("导出存档",`<p>复制下方文本，通过微信发送给朋友。对方导入后即可继续。</p><textarea class="save-text" id="saveText">${text}</textarea><button class="btn primary" id="copySave">复制存档文本</button>`);document.getElementById("copySave").onclick=()=>copyText(text,"存档文本已复制")}
-function importSave(){showModal("导入存档",`<p>粘贴完整存档文本。V1 至 V4 存档均可导入；V3 中过早触发的路线结局会自动恢复到扩写后的第六幕继续游玩。</p><textarea class="save-text" id="importText" placeholder="在此粘贴……"></textarea><button class="btn primary" id="doImport">校验并导入</button>`);document.getElementById("doImport").onclick=()=>{try{const p=decodeSave(document.getElementById("importText").value);if(p.kind!=="汴河夜雨存档"||!p.version||p.version>VERSION)throw 0;reviveState(p.state);meta=Object.assign(meta,p.meta||{});meta.routes=meta.routes||[];saveMeta();autoSave();closeModal();showGame();toast("存档导入成功。","good")}catch(e){toast("存档文本无效或版本不兼容。","bad")}}}
+function importSave(){showModal("导入存档",`<p>粘贴完整存档文本。V1 至 V6 存档均可导入；旧版的角色、装备、关系与成就会保留，并迁移到二十四幕长篇路线。</p><textarea class="save-text" id="importText" placeholder="在此粘贴……"></textarea><button class="btn primary" id="doImport">校验并导入</button>`);document.getElementById("doImport").onclick=()=>{try{const p=decodeSave(document.getElementById("importText").value);if(p.kind!=="汴河夜雨存档"||!p.version||p.version>VERSION)throw 0;reviveState(p.state);meta=Object.assign(meta,p.meta||{});meta.routes=meta.routes||[];saveMeta();autoSave();closeModal();showGame();toast("存档导入成功。","good")}catch(e){toast("存档文本无效或版本不兼容。","bad")}}}
 function copySummary(){
-  if(!state)return;const finished=state.routes.completed.map(id=>`${ROUTES[id].name}·${ROUTES[id].endings[state.routes.outcomes[id]||0].name}`).join("、")||"尚未完成二十幕长线";
+  if(!state)return;const finished=state.routes.completed.map(id=>`${ROUTES[id].name}·${ROUTES[id].endings[state.routes.outcomes[id]||0].name}`).join("、")||"尚未完成二十四幕长线";
   const text=`【汴河夜雨·江湖战报】\n${state.player.name}「${state.player.title}」｜${ORIGINS[state.player.origin].name}·${SCHOOLS[state.player.school].name}\nLv.${state.player.level}｜${REALMS[state.player.realm]}｜${STORY[state.node]?.chapter||"终局"}\n${routeReading()}\n已成章回：${finished}\n侠义 ${state.player.stats.chivalry}｜恶名 ${state.player.stats.notoriety}｜财富 ${state.player.stats.wealth}\n战斗胜利 ${state.battleWins}｜副本 ${Object.values(state.dungeons).reduce((n,x)=>n+x.clears,0)}｜成就 ${state.achievements.length}\n最近风闻：${state.routes.rumors.slice(-1).map(x=>x.text).join("；")||"江湖暂静"}\n近日履历：${state.history.slice(-3).map(x=>x.text).join("；")}\n非官方同人作品《汴河夜雨》`;
   copyText(text,"冒险摘要已复制，可粘贴到微信聊天。");
 }
 function copyText(text,msg){if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(()=>toast(msg,"good")).catch(()=>fallbackCopy(text,msg));else fallbackCopy(text,msg)}
 function fallbackCopy(text,msg){const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove();toast(msg,"good")}
+
+function validateStoryGraph(){
+  const errors=[];Object.entries(STORY).forEach(([id,node])=>{if(!node.title||!node.text)errors.push(`${id}: 缺标题或正文`);if(!Array.isArray(node.options)||!node.options.length)errors.push(`${id}: 无选项`)});
+  NORMAL_ROUTE_IDS.forEach(r=>{for(let i=0;i<24;i++)if(!STORY[`route_${r}_${i}`])errors.push(`${r}: 缺第${i+1}幕`)});
+  return errors;
+}
+function validateAllChoiceTargets(){
+  const errors=[];Object.entries(STORY).forEach(([id,node])=>(node.options||[]).forEach((o,i)=>{if(o.next&&!STORY[o.next])errors.push(`${id}[${i}] -> ${o.next}`);if(o.check){if(!STORY[o.check.success])errors.push(`${id}[${i}] 检定成功目标缺失`);if(!STORY[o.check.failure])errors.push(`${id}[${i}] 检定失败目标缺失`)}if(o.enemy&&!ENEMIES[o.enemy])errors.push(`${id}[${i}] 敌人缺失`);if(o.dungeon&&!DUNGEONS[o.dungeon])errors.push(`${id}[${i}] 副本缺失`)}));return errors;
+}
+function validateRouteIsolation(){
+  const errors=[];NORMAL_ROUTE_IDS.forEach(r=>{for(let i=0;i<24;i++){const n=STORY[`route_${r}_${i}`];(n?.options||[]).forEach(o=>{const m=o.next?.match(/^route_(law|border|trade|martial|message)_/);if(m&&m[1]!==r)errors.push(`${r} 第${i+1}幕越线至 ${m[1]}`)})}});return errors;
+}
+function validateDungeonReturns(){
+  return NORMAL_ROUTE_IDS.flatMap(r=>V6_ROUTE_META[r].dungeons.filter(id=>!DUNGEONS[id]||!(DUNGEON_CHAMBERS[id]?.length>=7)).map(id=>`${r}: ${id} 房间不足或不存在`));
+}
+function validateEndingReachability(){
+  const errors=[];NORMAL_ROUTE_IDS.forEach(r=>{const n=STORY[`route_${r}_23`];if((n?.options||[]).filter(o=>o.action==="routeResolve").length<5)errors.push(`${r}: 结局不足五个`)});return errors;
+}
+function validateEquipmentDatabase(){
+  return Object.entries(EQUIPMENT_DB).flatMap(([id,e])=>!e.name||!SLOTS.includes(e.slot)||!QUALITIES.includes(e.quality)||!e.base?[`${id}: 装备数据不完整`]:[]);
+}
+function validateSkillDatabase(){
+  const errors=[];Object.entries(SCHOOLS).forEach(([id,s])=>{if(s.skills.length!==8)errors.push(`${id}: 主动技能不是8个`);if(s.passives.length<6)errors.push(`${id}: 被动不足6个`);if(s.branches.length!==2)errors.push(`${id}: 进阶分支不足`);if(s.skills.map(x=>x.level).join(",")!==SKILL_LEVELS.join(","))errors.push(`${id}: 技能解锁等级错误`)});return errors;
+}
+function validateSaveState(sample=state||freshState()){
+  const required=["player","inventory","gear","skills","relations","quests","world","dungeons","activeRoute","routeLocked","routeBranch","routeFlags","routeCompleted","routeEnding"];
+  return required.filter(k=>sample[k]===undefined).map(k=>`存档缺少 ${k}`);
+}
+function runAllValidators(){
+  const groups={剧情图:validateStoryGraph(),选项目标:validateAllChoiceTargets(),路线隔离:validateRouteIsolation(),副本返回:validateDungeonReturns(),结局:validateEndingReachability(),装备:validateEquipmentDatabase(),技能:validateSkillDatabase(),存档:validateSaveState()};
+  return{groups,errors:Object.values(groups).flat(),ok:Object.values(groups).every(x=>x.length===0)};
+}
 
 function showCreator(reset=false){
   if(reset){state=null;creatorData={step:1,origin:null,school:null,keepsake:null}}
@@ -2374,7 +2824,9 @@ window.__BIANHE_TEST__={
   conditionResult,reviveState,enterNode,chooseOption,startBattle,battleAction,equipItem,unequipItem,useItem,
   completeDungeon,beginDungeon,dungeonStep,renderDungeonRoom,resolveEnding,applyEffects,fortAction,doBreakthrough,realmNeed,manualSave,manualLoad,
   autoSave,loadAuto,unlockAchievement,learnSkill,toggleSkill,reforgeEq,socketEq,selectOpening,advanceWorld,evaluateRouteFormation,routeReading,
-  resolveRoute,openCrossroads,ROUTE_EXTENSIONS,ROUTE_CODA,ROUTE_STAGE_GEAR,DUNGEON_CHAMBERS,getState:()=>state,setState:x=>{state=x}
+  resolveRoute,openCrossroads,startV6Route,pauseV6Route,NORMAL_ROUTE_IDS,V6_ROUTE_META,V6_BEATS,HEART_METHODS,COMMON_HEARTS,LEGACY_WEAPONS,
+  validateStoryGraph,validateAllChoiceTargets,validateRouteIsolation,validateDungeonReturns,validateEndingReachability,validateEquipmentDatabase,validateSkillDatabase,validateSaveState,runAllValidators,
+  ROUTE_EXTENSIONS,ROUTE_CODA,ROUTE_STAGE_GEAR,DUNGEON_CHAMBERS,getState:()=>state,setState:x=>{state=x}
 };
 })();
 </script>
