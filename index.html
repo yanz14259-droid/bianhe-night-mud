@@ -1,0 +1,1217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#15130f">
+  <meta name="format-detection" content="telephone=no">
+  <title>汴河夜雨 · 文字武侠 MUD</title>
+  <style>
+    :root{
+      --ink:#26221b;--ink-2:#5b5141;--paper:#eee4ca;--paper-2:#d9c9a4;
+      --night:#15130f;--night-2:#221e18;--gold:#bd9451;--gold-2:#e0c183;
+      --red:#8e312b;--green:#56725a;--blue:#526b78;--line:rgba(74,61,41,.3);
+      --fs:16px;--radius:14px;--safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;background:var(--night);color:var(--ink);font-family:"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC",serif;font-size:var(--fs)}
+    body{overflow-x:hidden}
+    button,input,select,textarea{font:inherit}
+    button{touch-action:manipulation}
+    .hidden{display:none!important}
+    .app{width:min(100%,720px);min-height:100dvh;margin:0 auto;background:
+      radial-gradient(circle at 20% 0,rgba(191,155,94,.18),transparent 34%),
+      linear-gradient(90deg,rgba(50,40,25,.06) 1px,transparent 1px),
+      var(--paper);background-size:auto,22px 22px,auto;position:relative;box-shadow:0 0 60px #000}
+    .paper-noise:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.1;z-index:50;background-image:radial-gradient(#2f281e .5px,transparent .7px);background-size:4px 4px}
+    .screen{min-height:100dvh}
+    .landing{padding:28px 20px calc(24px + var(--safe-bottom));display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;color:#eadfc4;background:
+      linear-gradient(rgba(15,14,12,.84),rgba(15,14,12,.94)),
+      radial-gradient(circle at 70% 15%,#7b6948,transparent 33%),
+      linear-gradient(145deg,#211f19,#0e0d0b)}
+    .landing:after{content:"汴";position:absolute;right:-26px;bottom:-70px;font-size:270px;color:rgba(207,172,106,.045);font-weight:700}
+    .seal{align-self:flex-start;border:1px solid #b65b4e;color:#d98472;padding:4px 9px;letter-spacing:.12em;font-size:12px;transform:rotate(-2deg)}
+    .brand{margin:26px 0 8px;font-size:clamp(42px,12vw,72px);line-height:.95;letter-spacing:.12em;color:#f1dfb4;text-shadow:0 3px 18px #000}
+    .brand-sub{color:#ad9d7b;letter-spacing:.28em;font-size:13px;margin-bottom:22px}
+    .pitch{max-width:32rem;line-height:1.9;color:#d1c5aa;margin:0 0 28px}
+    .disclaimer{border-left:2px solid #935149;padding:10px 12px;background:rgba(105,58,48,.13);font-size:12px;line-height:1.65;color:#ad9e80;margin-bottom:24px}
+    .landing-actions{display:grid;gap:10px;z-index:1}
+    .btn{border:1px solid #604d31;background:#f1e4c4;color:#282116;border-radius:10px;min-height:48px;padding:11px 16px;cursor:pointer;box-shadow:0 3px 0 rgba(45,35,22,.18);transition:.18s transform,.18s background}
+    .btn:active{transform:translateY(2px);box-shadow:none}
+    .btn.primary{background:linear-gradient(#c9a565,#a98242);color:#17130d;border-color:#e1c486;font-weight:700}
+    .btn.ghost{background:transparent;color:#c9bb9d;border-color:#685f4c}
+    .btn.danger{color:#7b2521;border-color:#9f5e55;background:#f0dbce}
+    .btn.small{min-height:38px;padding:7px 11px;font-size:13px}
+    .btn:disabled{opacity:.45;filter:grayscale(.6);cursor:not-allowed}
+    .continue-note{font-size:12px;color:#8e8065;text-align:center;margin-top:8px}
+
+    .creator{padding:20px 16px calc(30px + var(--safe-bottom));background:var(--paper);min-height:100dvh}
+    .creator-head{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
+    .creator-head h2{margin:0;font-size:24px;letter-spacing:.1em}
+    .step-mark{margin-left:auto;font-size:12px;color:var(--ink-2)}
+    .form-grid{display:grid;gap:14px}
+    label.field{display:grid;gap:7px;color:var(--ink-2);font-size:13px}
+    .field input,.field select{width:100%;border:1px solid #aa9873;border-radius:8px;background:rgba(255,250,235,.65);padding:12px;color:var(--ink);outline:none}
+    .field input:focus,.field select:focus{border-color:#8e6531;box-shadow:0 0 0 3px rgba(161,118,59,.13)}
+    .choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .choice-card{border:1px solid #aa9873;border-radius:10px;background:rgba(255,250,235,.5);padding:12px;text-align:left;color:var(--ink);min-height:84px;cursor:pointer}
+    .choice-card.selected{border:2px solid #8e312b;padding:11px;background:#f3e5c7;box-shadow:0 4px 14px rgba(77,48,22,.12)}
+    .choice-card b{display:block;font-size:16px;margin-bottom:6px}
+    .choice-card span{display:block;font-size:12px;line-height:1.55;color:var(--ink-2)}
+    .school-grid .choice-card{min-height:102px}
+    .creator-actions{display:flex;gap:10px;margin-top:20px}.creator-actions .btn{flex:1}
+
+    .game{padding-bottom:calc(78px + var(--safe-bottom));min-height:100dvh}
+    .statusbar{position:sticky;top:0;z-index:20;background:rgba(22,20,16,.97);color:#e9ddc0;padding:10px 12px;border-bottom:1px solid #5e4c30;box-shadow:0 5px 18px rgba(0,0,0,.24)}
+    .status-top{display:flex;align-items:center;gap:9px}.avatar{width:36px;height:36px;border:1px solid #9d7740;border-radius:50%;display:grid;place-items:center;color:#e1c181;background:#2a251c;font-weight:700}
+    .who{min-width:0;flex:1}.who b{font-size:15px}.who small{display:block;color:#a99977;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .place{font-size:12px;color:#c6b48f;max-width:88px;text-align:right}
+    .bars{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}
+    .bar{height:8px;background:#393329;border-radius:9px;overflow:hidden;position:relative}.bar i{display:block;height:100%;transition:width .3s}.bar.hp i{background:linear-gradient(90deg,#7d2824,#c8584d)}.bar.mp i{background:linear-gradient(90deg,#405d68,#68a0a8)}
+    .bar-labels{display:grid;grid-template-columns:1fr 1fr;gap:9px;font-size:10px;color:#b9aa8c;margin-top:3px}
+    .scene{padding:18px 15px 8px}
+    .chapter-kicker{font-size:11px;color:#8b6332;letter-spacing:.18em;margin-bottom:5px}
+    .scene h1{font-size:25px;margin:0 0 13px;letter-spacing:.06em}
+    .story-text{font-size:1em;line-height:1.92;color:#302a20;white-space:pre-line}
+    .story-text .dialogue{display:block;border-left:2px solid #9f7c48;padding:8px 12px;background:rgba(255,250,238,.58);margin:12px 0;color:#4a3823}
+    .delta-log{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
+    .delta{font-size:11px;padding:4px 7px;border-radius:20px;background:#ded0ad;color:#5d4a2e}.delta.good{background:#cbd8c5;color:#37513a}.delta.bad{background:#dfc0b6;color:#6f2e28}
+    .choices{padding:8px 15px 22px;display:grid;gap:10px}
+    .choice-btn{width:100%;border:1px solid #8e7a56;border-radius:11px;background:rgba(249,241,219,.84);color:#2d261c;text-align:left;min-height:55px;padding:12px 42px 12px 14px;position:relative;box-shadow:0 3px 9px rgba(76,55,27,.08);cursor:pointer;line-height:1.45}
+    .choice-btn:after{content:"›";position:absolute;right:15px;top:50%;transform:translateY(-50%);color:#9b6b2c;font-size:26px}
+    .choice-btn small{display:block;margin-top:5px;color:#806f54}.choice-btn.locked{opacity:.52}.choice-btn.hidden-choice{border-style:dashed;background:#e8ddc3}
+    .choice-btn.combat{border-color:#9b5a51}.choice-btn.combat:after{color:#9a332d}
+
+    .bottom-nav{position:fixed;z-index:25;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,720px);display:flex;overflow-x:auto;background:rgba(24,22,18,.98);border-top:1px solid #665338;padding:6px 5px calc(6px + var(--safe-bottom));scrollbar-width:none}
+    .bottom-nav::-webkit-scrollbar{display:none}.nav-btn{flex:0 0 64px;border:0;background:transparent;color:#b8aa8d;font-size:11px;padding:5px 2px;min-height:50px;cursor:pointer}.nav-btn i{display:block;font-style:normal;font-size:19px;color:#d0b47c;margin-bottom:3px}
+
+    .modal-wrap{position:fixed;z-index:40;inset:0;background:rgba(12,11,9,.67);display:flex;align-items:flex-end;justify-content:center}
+    .modal{width:min(100%,720px);max-height:88dvh;overflow:auto;background:var(--paper);border-radius:18px 18px 0 0;box-shadow:0 -10px 35px rgba(0,0,0,.35);padding-bottom:calc(16px + var(--safe-bottom));animation:rise .22s ease}
+    @keyframes rise{from{transform:translateY(25px);opacity:.4}}
+    .modal-head{position:sticky;top:0;z-index:3;display:flex;align-items:center;background:rgba(238,228,202,.97);border-bottom:1px solid var(--line);padding:14px 15px}.modal-head h2{margin:0;font-size:20px}.close{margin-left:auto;border:0;background:#d9c9a4;border-radius:50%;width:36px;height:36px;color:#4a3e2e;cursor:pointer}
+    .modal-body{padding:14px 15px}
+    .tabs{display:flex;gap:7px;overflow:auto;margin-bottom:12px;scrollbar-width:none}.tab{border:1px solid #9b8865;background:#eadcba;color:#5a4a32;border-radius:20px;padding:7px 12px;white-space:nowrap;cursor:pointer}.tab.active{background:#6c5130;color:#f6e8c6;border-color:#6c5130}
+    .panel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat-card,.list-card{border:1px solid #b4a17c;background:rgba(255,250,237,.55);border-radius:10px;padding:11px}
+    .stat-card span{font-size:11px;color:#796b54;display:block}.stat-card b{font-size:18px}.section-title{font-size:15px;margin:18px 0 9px;border-left:3px solid #8c6130;padding-left:8px}
+    .list{display:grid;gap:9px}.list-card{position:relative}.list-card h3{margin:0 0 5px;font-size:16px}.list-card p{margin:5px 0;font-size:12px;line-height:1.6;color:#625640}.meta-line{display:flex;gap:7px;flex-wrap:wrap;font-size:11px;color:#7a6b51}.tag{border:1px solid #ad956b;border-radius:12px;padding:2px 6px;background:#e8d9b8}.tag.good{border-color:#73886b;color:#3e5d3f}.tag.bad{border-color:#a16c63;color:#7b3029}
+    .card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.quality-凡品{color:#716b62}.quality-良品{color:#526d51}.quality-上品{color:#3e6783}.quality-珍品{color:#71538a}.quality-绝品{color:#9b5d1e}.quality-百炼{color:#a5322a}.quality-神兵{color:#bd8321;text-shadow:0 0 8px #deb85d}
+    .capacity{font-size:12px;color:#6d5e47;margin-bottom:10px}.locked-mark{position:absolute;right:10px;top:8px;color:#8e312b}
+    .empty{padding:28px;text-align:center;color:#887a62;border:1px dashed #b8a884;border-radius:10px}
+
+    .battle-box{margin:12px 15px 4px;border:1px solid #8d7550;border-radius:13px;background:rgba(37,31,23,.93);color:#ebdfc5;padding:13px;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+    .enemy-head{display:flex;align-items:center;gap:10px}.enemy-icon{width:42px;height:42px;border:1px solid #9a7340;border-radius:50%;display:grid;place-items:center;color:#e7bd76;background:#1c1914}.enemy-head b{font-size:17px}.enemy-head small{display:block;color:#a99b80;margin-top:3px}.enemy-head .phase{margin-left:auto;color:#e2a75f;font-size:12px}
+    .enemy-bar{height:11px;background:#443a2d;border-radius:9px;margin:10px 0 5px;overflow:hidden}.enemy-bar i{display:block;background:linear-gradient(90deg,#8c2b27,#d25a4c);height:100%;transition:width .3s}.enemy-hp-label{text-align:right;font-size:10px;color:#a99b80}
+    .status-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.status-pill{font-size:10px;border:1px solid #72634f;border-radius:12px;padding:2px 6px;color:#d4c4a6}
+    .battle-log{max-height:145px;overflow:auto;background:rgba(0,0,0,.22);border-radius:8px;padding:8px;margin-top:10px;font-size:12px;line-height:1.55;color:#cdbf9f}.battle-log div+div{margin-top:4px}.hint{color:#e3bd73}
+    .battle-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px 15px 22px}.battle-actions .btn{min-height:48px}.skill-actions{grid-column:1/-1;display:grid;gap:7px}.skill-btn{background:#e8d4aa}.skill-btn small{display:block;color:#756342;font-size:10px;margin-top:3px}
+
+    .toast-stack{position:fixed;z-index:80;left:50%;top:90px;transform:translateX(-50%);width:min(calc(100% - 30px),520px);display:grid;gap:7px;pointer-events:none}
+    .toast{background:rgba(28,24,18,.94);color:#eadab6;border:1px solid #806238;padding:10px 13px;border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.25);animation:toastIn .25s ease;font-size:13px}.toast.good{border-color:#688060}.toast.bad{border-color:#914d45}@keyframes toastIn{from{opacity:0;transform:translateY(-8px)}}
+    .ending{padding:30px 18px calc(110px + var(--safe-bottom));text-align:center;background:linear-gradient(rgba(239,228,200,.91),rgba(226,210,170,.97));min-height:calc(100dvh - 96px)}
+    .ending-seal{display:inline-grid;place-items:center;width:55px;height:55px;border:2px solid #8f382f;color:#8f382f;transform:rotate(-4deg);font-size:13px;letter-spacing:.12em}.ending h1{font-size:32px;margin:20px 0 8px}.ending h2{font-size:14px;font-weight:400;color:#786545;letter-spacing:.25em}.ending p{line-height:1.9;text-align:left}.ending-block{text-align:left;border-top:1px solid var(--line);margin-top:16px;padding-top:14px}.ending-actions{display:grid;gap:9px;margin-top:22px}
+    textarea.save-text{width:100%;height:170px;border:1px solid #a8936c;background:#faf2dc;border-radius:8px;padding:10px;font-size:11px;word-break:break-all}
+    .progress-line{height:8px;background:#d3c3a0;border-radius:8px;overflow:hidden}.progress-line i{display:block;height:100%;background:#8b6332}
+    .kbd{font-family:monospace;background:#d8c9a9;padding:1px 4px;border-radius:3px}
+    @media (min-width:600px){.landing{padding-inline:46px}.scene,.choices{padding-left:30px;padding-right:30px}.creator{padding-inline:34px}.choice-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.panel-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+    body.reduce-motion *,body.reduce-motion *:before,body.reduce-motion *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  </style>
+</head>
+<body class="paper-noise">
+<main class="app" id="app">
+  <section class="screen landing" id="landing">
+    <div class="seal">非官方同人作品</div>
+    <h1 class="brand">汴河<br>夜雨</h1>
+    <div class="brand-sub">北宋幻想 · 文字武侠 MUD</div>
+    <p class="pitch">一枚失落多年的“照夜璧”，牵动汴京、边关与半座江湖。你留下的每一句话、每一次拔刀，都会在后来得到回应。</p>
+    <div class="disclaimer">本作为非商业、非官方同人互动作品。仅借鉴北宋武侠江湖题材的氛围与玩法结构；角色、剧情、地名及全部文本均为原创，不含官方美术、音乐或剧情素材。</div>
+    <div class="landing-actions">
+      <button class="btn primary" id="newGameBtn">落笔入江湖</button>
+      <button class="btn ghost hidden" id="continueBtn">续写前尘</button>
+      <button class="btn ghost" data-open="archive">江湖图鉴</button>
+    </div>
+    <div class="continue-note">无需登录 · 自动存档 · 可离线游玩</div>
+  </section>
+
+  <section class="screen creator hidden" id="creator">
+    <div class="creator-head">
+      <button class="btn small" id="creatorBack">返回</button>
+      <h2 id="creatorTitle">写下名姓</h2>
+      <span class="step-mark" id="stepMark">一 / 三</span>
+    </div>
+    <div id="creatorStep1" class="form-grid">
+      <label class="field">角色姓名<input id="charName" maxlength="8" placeholder="如：沈砚秋"></label>
+      <label class="field">性别或自定义身份<select id="charGender"><option>女</option><option>男</option><option>自定义</option></select></label>
+      <label class="field hidden" id="customGenderWrap">如何称呼<input id="charCustomGender" maxlength="12" placeholder="写下你的身份"></label>
+      <label class="field">外貌特征<input id="charLook" maxlength="24" placeholder="如：眉目疏淡，左腕系红绳"></label>
+      <label class="field">江湖称号<input id="charTitle" maxlength="12" placeholder="如：听雨客"></label>
+    </div>
+    <div id="creatorStep2" class="hidden">
+      <p>出身决定初始资源、关系与专属见闻，但不会锁死你的道路。</p>
+      <div class="choice-grid" id="originChoices"></div>
+    </div>
+    <div id="creatorStep3" class="hidden">
+      <p>十一脉武学皆可通往巅峰。每一流派拥有独立招式、天赋与核心机制。</p>
+      <div class="choice-grid school-grid" id="schoolChoices"></div>
+    </div>
+    <div class="creator-actions">
+      <button class="btn" id="creatorPrev">上一步</button>
+      <button class="btn primary" id="creatorNext">下一步</button>
+    </div>
+  </section>
+
+  <section class="screen game hidden" id="game">
+    <header class="statusbar">
+      <div class="status-top">
+        <div class="avatar" id="avatar">侠</div>
+        <div class="who"><b id="statusName">无名客</b><small id="statusRealm">Lv.1 · 初窥门径</small></div>
+        <div class="place" id="statusPlace">汴河埠头</div>
+      </div>
+      <div class="bars">
+        <div class="bar hp"><i id="hpBar"></i></div><div class="bar mp"><i id="mpBar"></i></div>
+      </div>
+      <div class="bar-labels"><span id="hpLabel">气血</span><span id="mpLabel">内力</span></div>
+    </header>
+    <div id="sceneArea">
+      <section class="scene">
+        <div class="chapter-kicker" id="chapterKicker">序章</div>
+        <h1 id="sceneTitle">汴河夜雨</h1>
+        <div class="story-text" id="storyText"></div>
+        <div class="delta-log" id="deltaLog"></div>
+      </section>
+      <section class="choices" id="choices"></section>
+    </div>
+    <div id="battleArea" class="hidden"></div>
+    <nav class="bottom-nav" aria-label="游戏功能">
+      <button class="nav-btn" data-open="character"><i>侠</i>角色</button>
+      <button class="nav-btn" data-open="inventory"><i>囊</i>背包</button>
+      <button class="nav-btn" data-open="equipment"><i>甲</i>装备</button>
+      <button class="nav-btn" data-open="skills"><i>武</i>武学</button>
+      <button class="nav-btn" data-open="quests"><i>卷</i>任务</button>
+      <button class="nav-btn" data-open="relations"><i>缘</i>关系</button>
+      <button class="nav-btn" data-open="fort"><i>庐</i>福地</button>
+      <button class="nav-btn" data-open="achievements"><i>印</i>成就</button>
+      <button class="nav-btn" data-open="settings"><i>设</i>设置</button>
+    </nav>
+  </section>
+</main>
+<div class="modal-wrap hidden" id="modalWrap" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-head"><h2 id="modalTitle">卷宗</h2><button class="close" id="modalClose" aria-label="关闭">×</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+<div class="toast-stack" id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+"use strict";
+const SAVE_KEY="bianheNight.auto.v1", META_KEY="bianheNight.meta.v1", SLOT_PREFIX="bianheNight.slot.";
+const VERSION=1, REALMS=["初窥门径","略有小成","融会贯通","炉火纯青","登峰造极","返璞归真","天人合一"];
+const SLOTS=["武器","头部","上衣","护腕","腰带","鞋履","项链","戒指","护符"];
+const QUALITIES=["凡品","良品","上品","珍品","绝品","百炼","神兵"];
+const STATUS_NAMES={poison:"中毒",bleed:"流血",stun:"眩晕",root:"定身",armorBreak:"破甲",weak:"虚弱",burn:"灼烧",cold:"寒冷",shield:"护盾",regen:"回春",hidden:"隐匿",berserk:"狂暴"};
+const ORIGINS={
+  noble:{name:"汴京世家",desc:"礼法与旧识皆是门路，也是枷锁。",stats:{insight:3,reputation:4,wealth:120},item:"汴京牙牌",relation:{guLin:{favor:2,trust:1}},exclusive:"能从官牍暗纹认出旧章。"},
+  soldier:{name:"边境军户",desc:"听惯烽燧，知道军令与人命的重量。",stats:{attack:3,defense:3,hpMax:18,chivalry:3},item:"雁翎旧箭",relation:{xiaoYanzhen:{favor:3,trust:2}},exclusive:"熟悉雁门旧垒的换防暗号。"},
+  merchant:{name:"江南商贾",desc:"算盘不妨碍侠心，价码有时比刀更锋利。",stats:{wealth:260,luck:2,reputation:2},item:"水路商券",relation:{suYuan:{favor:3,trust:1}},exclusive:"可开启商路与议价路线。"},
+  healer:{name:"山野医者",desc:"辨百草，也辨得出伤口不会撒谎。",stats:{healing:5,insight:3,energy:10},item:"青囊针匣",relation:{wenJiu:{favor:3,trust:2}},exclusive:"能救回本会死去的人。"},
+  orphan:{name:"江湖孤儿",desc:"没有门第可依，最懂巷陌与人心。",stats:{agility:4,luck:3,notoriety:1},item:"半枚铜铃",relation:{linQue:{favor:4,trust:1}},exclusive:"可听懂市井黑话。"},
+  hermit:{name:"隐世门徒",desc:"师门不在名册上，旧誓却如影随形。",stats:{insight:5,crit:3,mpMax:14},item:"无字残页",relation:{heZhaoyin:{favor:1,trust:3}},exclusive:"能识破照夜璧的伪造气机。"},
+  zhibeiyou:{name:"帮会《知北游》",desc:"走南闯北的闲人同盟，消息比马快。",stats:{reputation:3,agility:2,wealth:80},item:"知北游木牌",relation:{yeShuang:{favor:3,trust:2}},exclusive:"可借用帮会驿站与密语。"}
+};
+
+const SCHOOLS={
+  tieyi:{name:"铁衣",role:"守御反击",mechanic:"不动势：受击积势，满层强化反击与护盾。",growth:"玄甲镇岳",passives:["铁骨：防御时额外减伤","镇守：保护伙伴时获得声望"],achievement:"一夫当关",event:"旧垒城门下，你能以双肩顶住将倾闸门。",stats:{hpMax:32,defense:7,attack:1},skills:[
+    ["撼岳","attack",8,1.15,"armorBreak"],["铁壁","shield",10,0.9],["擒风","control",12,0.75,"root"],["镇关","attack",18,1.65,"stun"]]},
+  suwen:{name:"素问",role:"治疗净化",mechanic:"芳息：治疗与净化积攒芳息，可令濒危者免死一次。",growth:"万春回生",passives:["仁心：药品效果提高","清音：回春状态延长"],achievement:"一念回春",event:"疫坊封门之夜，你可选择治人、查毒或保存药方。",stats:{healing:8,mpMax:28,insight:2},skills:[
+    ["拂露","heal",8,1.2],["兰息","regen",10,0.8],["清商","cleanse",12,0],["回雪","attack",16,1.3,"cold"]]},
+  suimeng:{name:"碎梦",role:"潜行会心",mechanic:"影痕：连续攻击叠加影痕，第三击必定会心。",growth:"无间夜行",passives:["藏锋：首击会心提高","断影：击败敌人恢复身法"],achievement:"无声惊雷",event:"追踪屋脊刺客时，可进入只有影客看得见的暗门。",stats:{attack:6,agility:7,crit:7,defense:-2},skills:[
+    ["掠影","attack",7,1.2,"hidden"],["断星","attack",10,1.45,"bleed"],["无声步","hidden",9,0],["惊寂","attack",18,1.9,"weak"]]},
+  shenxiang:{name:"神相",role:"远程控制",mechanic:"五音：按招式积累宫商角羽，调和后触发群体余响。",growth:"弦动九霄",passives:["余音：控制命中提高","远岫：观察可恢复内力"],achievement:"弦止干戈",event:"太常旧谱中藏着一段只有神相能复原的密令。",stats:{attack:4,mpMax:34,hit:5,insight:3},skills:[
+    ["清弦","attack",8,1.15,"cold"],["徵火","attack",12,1.35,"burn"],["空山","control",13,0.7,"stun"],["广陵散","attack",20,1.75,"weak"]]},
+  jiuling:{name:"九灵",role:"召唤毒蚀",mechanic:"魂契：以魂契召来影傀，傀儡会复制部分状态伤害。",growth:"幽契万灵",passives:["噬魂：中毒目标受伤提高","傀儡心：首次致命伤由影傀承担"],achievement:"幽契无悔",event:"乱葬岗的无名魂魄愿意说出旧案，但会索取记忆。",stats:{mpMax:32,attack:4,break:4,luck:1},skills:[
+    ["缚魂","control",10,0.8,"root"],["蚀骨","attack",10,1.05,"poison"],["影傀","shield",13,0.8],["百鬼行","attack",20,1.7,"weak"]]},
+  xuehe:{name:"血河",role:"突进续战",mechanic:"战意：受伤与攻击积攒战意，高战意附带吸血。",growth:"赤霄横槊",passives:["浴血：低气血提高攻击","长驱：逃跑失败转为突进攻击"],achievement:"血战不退",event:"边军认得血河旧枪势，你可接下一场军中约战。",stats:{hpMax:24,attack:6,break:4,healing:1},skills:[
+    ["踏阵","attack",8,1.2,"armorBreak"],["横槊","attack",11,1.45,"bleed"],["饮血","drain",13,1.1],["烽火连营","attack",20,1.8,"berserk"]]},
+  canglan:{name:"沧澜",role:"水势长刀",mechanic:"潮势：招式交替涨潮退潮，涨潮增伤、退潮回气。",growth:"鲸波断流",passives:["听潮：水域环境身法提高","断浪：对护盾目标破防提高"],achievement:"沧海一刀",event:"镜湖水下暗流中，沧澜可听浪辨出生门。",stats:{attack:5,agility:4,break:5},skills:[
+    ["逐浪","attack",8,1.2,"cold"],["回汐","heal",9,0.65],["断潮","attack",13,1.55,"armorBreak"],["沧海横流","attack",21,1.9,"root"]]},
+  xuanji:{name:"玄机",role:"机关远射",mechanic:"机括：布置零件后可组合成弩台、绊索或爆火匣。",growth:"千机无算",passives:["巧手：锻造消耗降低","测距：观察后命中提高"],achievement:"算无遗策",event:"天机秘府的废弩会向你吐露制造者留下的暗号。",stats:{hit:7,break:5,insight:4,attack:3},skills:[
+    ["连弩","attack",8,1.18,"bleed"],["绊机","control",10,0.8,"root"],["火匣","attack",14,1.5,"burn"],["天罗阵","shield",18,1.25]]},
+  hongyin:{name:"鸿音",role:"音律辅助",mechanic:"梵响：攻击、守护、疗愈三类音色组合成不同终曲。",growth:"大音希声",passives:["和鸣：伙伴在场时全属性提高","静心：眩晕抗性提高"],achievement:"大音渡人",event:"雨夜破庙里，亡者遗曲可让真正的凶手失态。",stats:{healing:5,mpMax:26,reputation:3,defense:2},skills:[
+    ["雁回","attack",8,1.05,"weak"],["定音","control",10,0.75,"stun"],["渡生","heal",12,1.05],["无弦曲","shield",18,1.1]]},
+  chaoguang:{name:"潮光",role:"光影剑舞",mechanic:"明暗：招式在明辉与幽影间切换，明辉护体、幽影会心。",growth:"潮生月落",passives:["月照：夜间幸运提高","回光：护盾破碎时恢复内力"],achievement:"月落潮生",event:"照夜璧映出另一段月影，唯潮光能踏光入内。",stats:{crit:4,agility:5,mpMax:20,defense:1},skills:[
+    ["浮光","attack",7,1.18,"hidden"],["暗潮","attack",11,1.4,"weak"],["月鉴","shield",11,0.85],["潮生","attack",19,1.75,"cold"]]},
+  longyin:{name:"龙吟",role:"剑气调息",mechanic:"剑心：剑招消耗剑意，调息将余意化为治疗与爆发。",growth:"龙啸青冥",passives:["剑骨：破防后恢复内力","归息：战后额外恢复"],achievement:"剑问本心",event:"无名剑冢会追问你为何出剑，答案改变神兵意志。",stats:{attack:5,healing:3,insight:4,crit:2},skills:[
+    ["听雨","attack",8,1.2,"bleed"],["惊雷","attack",12,1.48,"stun"],["归息","heal",10,0.85],["龙啸","attack",20,1.86,"armorBreak"]]}
+};
+
+const NPCS={
+  linQue:{name:"林鹊",identity:"身份成谜的少年",personality:"机警、嘴硬、重诺",goal:"查明父亲被灭口的真相",secret:"体内藏有照夜璧的半幅星图",stance:"游离",quest:"鹊踏檐铃",fates:["成为新一代知北游行首","死于替你挡下暗箭"]},
+  guLin:{name:"顾临川",identity:"大理寺缉案使",personality:"守序、克制、善疑",goal:"让证据胜过门第",secret:"奉有一道监视你的密旨",stance:"朝廷",quest:"无字公牍",fates:["辞官执灯巡夜","成为冷酷的新任寺卿"]},
+  wenJiu:{name:"温九针",identity:"行脚医者",personality:"温和、固执、厌杀",goal:"寻回被权贵夺走的疫方",secret:"曾为反派救过命",stance:"民间",quest:"药炉余灰",fates:["开设济世药庐","携罪远走西南"]},
+  suYuan:{name:"苏砚舟",identity:"四海栈少主",personality:"风趣、精明、念旧",goal:"摆脱商会元老控制",secret:"商会曾转运秘宝残件",stance:"商会",quest:"一纸千金",fates:["重写商路规矩","被逐后成为走私巨魁"]},
+  xiaoYanzhen:{name:"萧砚真",identity:"定北军副将",personality:"刚烈、寡言、护短",goal:"替旧垒三百亡魂洗冤",secret:"她的父亲签下过弃城令",stance:"边军",quest:"烽火旧札",fates:["守关十年不退","以死偿还父债"]},
+  yeShuang:{name:"叶双白",identity:"情报贩子",personality:"慵懒、敏锐、利己",goal:"买下自己的自由",secret:"同时替三方递送假消息",stance:"知北游",quest:"三封假信",fates:["与你共建江湖耳目","卖掉最后一条真相"]},
+  muHanshan:{name:"穆寒山",identity:"流派师长",personality:"严厉、惜才、守旧",goal:"保住逐渐凋零的传承",secret:"曾参与封存照夜璧",stance:"门派",quest:"石上旧招",fates:["传位后归隐","为守门规与你决裂"]},
+  qiuMing:{name:"裘明岫",identity:"对立门派弟子",personality:"骄傲、坦荡、好胜",goal:"堂堂正正胜你一次",secret:"是商会安插进门派的人质",stance:"对立门派",quest:"剑下留名",fates:["并肩破局","成为你一生宿敌"]},
+  zhouQian:{name:"周千户",identity:"皇城司暗探",personality:"冷静、功利、耐心",goal:"以秘宝换取升迁",secret:"真正效忠的是太后外戚",stance:"朝堂",quest:"灯下黑",fates:["权势熏天","死在无人记得的暗巷"]},
+  weiWuming:{name:"魏无明",identity:"照骨楼主人",personality:"从容、偏执、极具说服力",goal:"用照夜璧重写天下秩序",secret:"他也是旧案中被牺牲的孩子",stance:"照骨楼",quest:"照骨之问",fates:["伏诛于璧前","放下执念远走海上"]},
+  heZhaoyin:{name:"鹤照隐",identity:"隐世高手",personality:"疏狂、通透、畏因果",goal:"等一个肯毁掉神兵的人",secret:"照夜璧最初的铸造者之一",stance:"隐世",quest:"七日观心",fates:["散功成普通老人","再入红尘镇守秘府"]},
+  tangYun:{name:"唐云栖",identity:"可招募伙伴",personality:"爽朗、重情、怕水",goal:"赎回被水匪掳走的乡亲",secret:"曾经是镜湖水寨二当家",stance:"民间",quest:"水上故人",fates:["成为你的福地管事","重返水寨做一名义匪"]}
+};
+
+const SETS={
+  patrol:{name:"汴梁夜巡",two:"命中 +4",four:"调查检定 +3",six:"夜间首次攻击必定会心"},
+  tide:{name:"镜湖潮痕",two:"身法 +4",four:"寒冷抗性提高",six:"水域行动额外触发潮击"},
+  yanmen:{name:"雁门烽雪",two:"防御 +5",four:"低气血时获得护盾",six:"守城战中全属性提高"},
+  tianji:{name:"天机遗构",two:"破防 +5",four:"机关行动消耗降低",six:"每战可免费发动一次环境行动"}
+};
+const EQUIPMENT_DB={};
+const SLOT_NAMES={
+  "武器":["榆木短杖","青锋窄剑","折潮刀","藏星匕","照雪枪","百炼无妄","问夜"],
+  "头部":["粗麻束发","巡坊幞头","水纹冠","夜行兜帽","雁翎盔","百炼玄冠","观星冕"],
+  "上衣":["旧布短褐","护院劲装","流云袍","暗纹大氅","烽雪甲","百炼山河衣","无尘羽衣"],
+  "护腕":["麻绳护腕","铜扣腕甲","逐浪护手","锁魂袖箭","镇岳臂铠","百炼天工腕","藏日环"],
+  "腰带":["布结腰绳","皮革束带","青玉腰封","夜雨银绦","虎符战带","百炼龙纹带","星河索"],
+  "鞋履":["芒鞋","皂靴","踏波履","无声靴","寒关战靴","百炼追风履","缩地靴"],
+  "项链":["木珠","铜钱链","湖心珠","乌金坠","烽火牙链","百炼照心链","月魄"],
+  "戒指":["草编指环","赤铜戒","浪纹银戒","墨玉扳指","将星环","百炼乾坤戒","无相指"],
+  "护符":["黄纸平安符","城隍木符","水君佩","听影符","定军符","百炼归元符","照夜心"]
+};
+function buildEquipmentDB(){
+  SLOTS.forEach((slot,si)=>QUALITIES.forEach((q,qi)=>{
+    const id=`eq_${si}_${qi}`, lvl=Math.max(1,qi*4+si%3), set=qi>=2?[null,null,"tide","patrol","yanmen","tianji",null][qi]:null;
+    const mainKey=["attack","defense","hpMax","crit","agility","break","insight","healing","luck"][si];
+    EQUIPMENT_DB[id]={id,name:SLOT_NAMES[slot][qi],slot,quality:q,levelReq:lvl,realmReq:Math.max(0,qi-2),base:{[mainKey]:2+qi*3+Math.floor(si/3)},set,
+      desc:`以${["寻常木铁","汴京老作坊","江湖巧匠","秘市奇材","边关精锻","百炼古法","不知名天外材"][qi]}制成的${slot}，器物上留有细小的夜雨纹。`,
+      source:["市井杂货","汴京悬赏","镜湖沉船","雨夜破庙","雁门旧垒","天机秘府","照夜真相线"][qi]};
+    if(id==="eq_0_6")EQUIPMENT_DB[id].desc="神兵“问夜”拥有自己的意志。它会记住持有者的仁恕、执念与恶名，在终局选择保护、沉默，或反噬其主。";
+  }));
+}
+buildEquipmentDB();
+
+const ITEMS={
+  smallPill:{id:"smallPill",name:"止血散",type:"药品",desc:"恢复 35 气血。",use:{hp:35},value:18},
+  bigPill:{id:"bigPill",name:"玉露丹",type:"药品",desc:"恢复 80 气血并清除流血。",use:{hp:80,cleanse:"bleed"},value:55},
+  spiritTea:{id:"spiritTea",name:"松风茶",type:"药品",desc:"恢复 35 内力。",use:{mp:35},value:30},
+  antidote:{id:"antidote",name:"百草解毒丸",type:"药品",desc:"清除中毒和虚弱。",use:{cleanse:"poison"},value:32},
+  coldSoup:{id:"coldSoup",name:"姜桂汤",type:"药品",desc:"清除寒冷，恢复少量气血。",use:{hp:20,cleanse:"cold"},value:16},
+  herb:{id:"herb",name:"青梗草",type:"材料",desc:"药圃常见药材。",value:8},
+  iron:{id:"iron",name:"乌铁碎片",type:"材料",desc:"强化装备的基础材料。",value:12},
+  silk:{id:"silk",name:"湖蚕丝",type:"材料",desc:"来自镜湖水下沉箱。",value:24},
+  timber:{id:"timber",name:"沉香木",type:"材料",desc:"升级福地建筑。",value:28},
+  page:{id:"page",name:"武学残页",type:"秘籍",desc:"突破境界的重要凭证。",value:80},
+  hiddenManual:{id:"hiddenManual",name:"《息兵问心篇》",type:"秘籍",desc:"记载一门以止戈为旨的隐藏心法。",value:220},
+  rope:{id:"rope",name:"飞索",type:"奇物",desc:"可绕过部分身法检定。",value:45},
+  lantern:{id:"lantern",name:"避水灯",type:"奇物",desc:"镜湖水下仍可燃烧的冷灯。",value:90},
+  copperBell:{id:"copperBell",name:"半枚铜铃",type:"任务道具",desc:"林鹊似乎见过另一半。",value:0},
+  yamenBadge:{id:"yamenBadge",name:"汴京牙牌",type:"任务道具",desc:"背面刻有已被裁撤的官署暗记。",value:0},
+  oldArrow:{id:"oldArrow",name:"雁翎旧箭",type:"任务道具",desc:"箭簇上有旧垒督造印。",value:0},
+  tradeToken:{id:"tradeToken",name:"水路商券",type:"任务道具",desc:"可调动四海栈的一条暗船。",value:0},
+  needleBox:{id:"needleBox",name:"青囊针匣",type:"奇物",desc:"治疗检定获得优势。",value:110},
+  blankPage:{id:"blankPage",name:"无字残页",type:"秘籍",desc:"遇照夜之光才会显字。",value:0},
+  zhibeiyouToken:{id:"zhibeiyouToken",name:"知北游木牌",type:"任务道具",desc:"敲三下桌面，便有人来听故事。",value:0},
+  mirrorShard:{id:"mirrorShard",name:"照夜璧残光",type:"奇物",desc:"会回应玩家的重要选择。",value:0},
+  starMap:{id:"starMap",name:"半幅星图",type:"任务道具",desc:"指向天机秘府的深层。",value:0},
+  beastEgg:{id:"beastEgg",name:"受伤灵兽卵",type:"奇物",desc:"带回福地长期照料或许会孵化。",value:0},
+  bomb:{id:"bomb",name:"震雷火",type:"药品",desc:"战斗中造成 45 点无视防御伤害。",use:{damage:45},value:70}
+};
+Object.assign(ITEMS,{
+  goldSore:{id:"goldSore",name:"金疮膏",type:"药品",desc:"恢复 50 气血。",use:{hp:50},value:30},
+  clarity:{id:"clarity",name:"明心丸",type:"药品",desc:"恢复 22 内力并清除虚弱。",use:{mp:22,cleanse:"weak"},value:36},
+  smoke:{id:"smoke",name:"迷烟丸",type:"药品",desc:"战斗中制造隐匿机会。",use:{status:"hidden"},value:48},
+  jerky:{id:"jerky",name:"五香肉脯",type:"药品",desc:"恢复 18 气血与少量精力。",use:{hp:18,energy:12},value:14},
+  wine:{id:"wine",name:"松醪酒",type:"药品",desc:"恢复 28 内力，但不宜贪杯。",use:{mp:28},value:22},
+  flour:{id:"flour",name:"汴麦面",type:"材料",desc:"福地烹饪的常备食材。",value:6},
+  leather:{id:"leather",name:"熟牛皮",type:"材料",desc:"修整护具与行囊。",value:18},
+  copperGear:{id:"copperGear",name:"黄铜机括",type:"材料",desc:"天机机关拆下的精密零件。",value:32},
+  coal:{id:"coal",name:"松纹炭",type:"材料",desc:"锻造台稳定炉温的好炭。",value:10},
+  pearlDust:{id:"pearlDust",name:"湖珠粉",type:"材料",desc:"炼制净化药物的辅料。",value:26},
+  lacquer:{id:"lacquer",name:"朱砂漆",type:"材料",desc:"福地陈列与机关防潮用材。",value:20},
+  starMetal:{id:"starMetal",name:"星陨砂",type:"材料",desc:"据说能回应神兵意志。",value:95}
+});
+
+const ACHIEVEMENTS=[
+ ["prologue","初入江湖","剧情","完成序章。"],["firstBlood","风雨第一刀","战斗","赢得第一场战斗。"],["observeBoss","知己知彼","战斗","在首领战中观察弱点。"],
+ ["talkBoss","不战而屈人之兵","战斗","通过交涉解决一场首领冲突。"],["crossTier","一身是胆","战斗","越级击败强敌。"],["oneHp","命不该绝","特殊失败","气血仅剩一点时获胜。"],
+ ["hundredForge","百炼成钢","收集","获得第一件百炼装备。"],["godWeapon","神兵择主","收集","获得拥有意志的神兵“问夜”。"],["setFour","衣冠成阵","收集","激活四件套效果。"],
+ ["rainTemple","雨夜无妄","探索","通关雨夜破庙。"],["mirrorLake","湖底明灯","探索","通关镜湖沉船。"],["yanmenFort","旧垒新火","探索","通关雁门旧垒。"],
+ ["tianjiVault","天机可破","探索","通关天机秘府。"],["allDungeons","踏破四境","探索","通关全部副本。"],["hiddenRoom","门后有门","探索","发现一间隐藏房。"],
+ ["fortOwner","福地之主","探索","将福地升至最高等级。"],["healerTen","妙手回春","关系","累计救治十名角色。"],["swornFriend","刎颈之交","关系","与一名角色好感和信任皆达到八十。"],
+ ["everyoneHates","举世皆敌","特殊失败","所有主要势力都与你交恶。"],["fleeFive","走为上计","特殊失败","累计逃离五场战斗。"],["realmUp","破境听心","战斗","完成第一次境界突破。"],
+ ["perfectRealm","一念通明","隐藏","在心境试炼中达成完美突破。 ",true],["demonRealm","心火难平","特殊失败","突破时走火入魔。"],["allRegions","踏遍山河","探索","发现全部主要地区。"],
+ ["rich","一掷千金","收集","财富达到一千。"],["truth","照夜见真","剧情","拼合照夜璧背后的完整真相。"],["mercy","刀下留人","剧情","三次放过本可杀死的敌人。"],
+ ["oldDream","旧梦重来","隐藏","在二周目发现前世线索。",true],["fateBreaker","不在局中","隐藏","进入二周目限定结局。",true],["schoolMaster","一脉宗师","剧情","抵达返璞归真。"],
+ ["tenAdventures","奇闻满箧","探索","完成十项奇遇。"],["nightBlade","夜雨藏锋","隐藏","让神兵在终局选择保护你。",true],["brokenBlade","反噬其主","隐藏","让神兵在终局背叛你。",true],
+  ["chapter1","汴京迷局","剧情","结束汴京旧案第一幕。"],["saveFriend","雁归有信","关系","令边关旧案中的旧友生还。"],["collector","百物入囊","收集","累计获得四十件物品。"]
+].map((a,i)=>({id:a[0],name:a[1],category:a[2],desc:a[3],hidden:!!a[4],index:i}));
+Object.entries(SCHOOLS).forEach(([id,s])=>ACHIEVEMENTS.push({
+  id:`school_${id}`,name:s.achievement,category:"战斗",desc:`完成${s.name}专属事件，并在战斗中引动一次完整的${s.mechanic.split("：")[0]}。`,hidden:false,index:ACHIEVEMENTS.length
+}));
+[
+  ["d_secret_rain","佛后藏灯","在雨夜破庙中不伤无辜地找出真凶。"],
+  ["d_secret_lake","一息百尺","携避水灯从镜湖水下密道完成绝境挑战。"],
+  ["d_secret_fort","三百姓名","带着原始信物让旧垒亡者重新有名。"],
+  ["d_secret_vault","无门之门","从天机秘府的随机秘室找到机枢后门。"]
+].forEach(a=>ACHIEVEMENTS.push({id:a[0],name:a[1],category:"隐藏",desc:a[2],hidden:true,index:ACHIEVEMENTS.length}));
+
+const ENDINGS={
+  hero:{name:"侠名天下",title:"河岳清平客",desc:"你把真相交给了天下，也把选择留给了天下。茶坊说书人讲到你的名字，总会先停一停，等满堂安静。",hint:"维持高侠义并公开真相。"},
+  court:{name:"权倾朝野",title:"绣衣执衡使",desc:"你收起江湖人的短刀，接过能裁定万千性命的官印。你让秩序更有效，也让许多人开始害怕你的沉默。",hint:"偏向权谋与朝廷，并掌握秘宝。"},
+  hermit:{name:"归隐山林",title:"松间无名客",desc:"照夜璧沉入无人知晓的深潭。你在山中种药煮茶，偶尔有旧友循炊烟来访，却无人再问天下。",hint:"重视自由，守住福地后离开纷争。"},
+  demon:{name:"江湖魔头",title:"照骨夜君",desc:"你以秘宝压服诸门，曾经的敌人与友人都学会在你出现时低头。天下安静了，却再没有人敢说那是太平。",hint:"恶名、执念与秘宝意志共同失控。"},
+  wander:{name:"孤身远走",title:"天涯断雁",desc:"你没有留下解释，只带一匹瘦马出关。多年后仍有人在塞外见过相似背影，但没有谁能确认那是不是你。",hint:"关系疏离并选择离开。"},
+  master:{name:"门派宗师",title:"开山立脉人",desc:"你没有把秘宝献给任何势力，而是把一路所得化作一套可传后世的武学。门下不问出身，只问为何出招。",hint:"高境界且完成流派成长。"},
+  general:{name:"守关名将",title:"雁门长城",desc:"你把江湖恩怨留在关内，自请镇守雁门。此后十年，北风仍烈，城头那盏灯却再没熄过。",hint:"边军关系深厚并守住旧垒。"},
+  tycoon:{name:"富甲天下",title:"四海持灯人",desc:"你不称王也不入仕，只重新画了一张商路图。粮、药与消息在你的船上流动，足以改变许多战争的结局。",hint:"积累巨额财富并扶持商会。"},
+  guardian:{name:"秘宝守护者",title:"照夜守灯人",desc:"你把照夜璧封入福地地下，约定每代只传一个守灯人。神兵问夜伏在门前，再不为权势出鞘。",hint:"封印秘宝、福地稳固且神兵认可你。"},
+  buried:{name:"真相埋葬者",title:"无字史官",desc:"你烧掉星图与证词，让旧案永远失去名字。幸存者因此得以安生，可那些无人申冤的亡者也再等不到一句公道。",hint:"主动销毁真相。"},
+  betrayed:{name:"众叛亲离",title:"孤城执璧人",desc:"你终于握住了所有人争夺的东西，也终于发现身边再没有一个肯直呼你姓名的人。照夜之光很亮，照不出归路。",hint:"信任崩塌后仍执掌秘宝。"},
+  death:{name:"身死道消",title:"夜雨无名碑",desc:"你的故事停在这一夜。后来有人替你立碑，却不知道该写侠客、恶徒，还是一个不肯退的人。",hint:"在关键战斗中接受死亡。"},
+  dawn:{name:"破晓无局",title:"局外观星者",desc:"前世的碎片与今生的证词在照夜璧中重合。你没有沿用任何一方给出的答案，而是拆毁了那架制造争夺的机器。天亮时，江湖第一次没有照既定的剧本运转。",hint:"仅二周目可见的真相结局。"}
+};
+
+const ADVENTURES=[
+  ["adv_cat","瓦上狸奴","汴京","雨后","幸运≥8","救下一只偷叼公文的狸猫。"],["adv_kite","断线纸鸢","汴京","午后","林鹊好感","纸鸢线牵出一封未寄的家书。"],
+  ["adv_tea","盲叟听茶","汴京","清晨","悟性≥10","从滚水声里听出一招掌法。"],["adv_bell","钟楼十三声","汴京","子夜","持有铜铃","多出的一声来自无人钟楼。"],
+  ["adv_herb","雪下青芽","雁门","雪天","山野医者","救治冻伤的斥候。"],["adv_wolf","白狼衔箭","雁门","黄昏","放过敌人≥1","白狼带来旧垒失踪者的箭。"],
+  ["adv_boat","逆流纸船","镜湖","雨夜","失败次数≥1","纸船载着未来的落款。"],["adv_pearl","无蚌之珠","镜湖","月夜","避水灯","湖底佛龛藏着无主明珠。"],
+  ["adv_sword","剑冢无剑","栖霞岭","任意","龙吟或高悟性","回答为何出剑。"],["adv_ghost","无名军灶","雁门","夜间","完成边关旧案","为亡兵烧一锅热粥。"],
+  ["adv_book","倒写藏书","福地","任意","藏书阁","从倒写书页读出密室坐标。"],["adv_beast","檐下异卵","福地","连续照料","持有灵兽卵","孵化伙伴“墨团”。"],
+  ["adv_letter","二十年回信","福地","任意","江湖来信","替陌生人续写一封迟来的信。"],["adv_mask","无脸社火","汴京","上元","恶名或声望","戴上面具听见真实评价。"],
+  ["adv_dream","旧梦照夜","天机秘府","二周目","记忆碎片","看见前世失败的最终一刻。"]
+].map(a=>({id:a[0],name:a[1],place:a[2],time:a[3],condition:a[4],desc:a[5]}));
+
+const DUNGEONS={
+  rainTemple:{name:"雨夜破庙",rec:"Lv.3 · 初窥门径",desc:"四名避雨客里，有一人鞋底没有泥。先查谎言，还是先护住受伤书生？",enemy:"templeKiller",routes:[
+    {id:"question",name:"逐句盘问",desc:"以悟性与线索压缩嫌疑范围。",env:"残烛与神像暗格"},
+    {id:"guard",name:"守住后门",desc:"用耐心等凶手露出破绽。",env:"漏雨与朽梁"},
+    {id:"ambush",name:"假装熟睡",desc:"以身法换取先手。",env:"黑暗与钟绳"}],drops:["汴梁夜巡套装","止血散","武学残页"],achievement:"雨夜无妄"},
+  mirrorLake:{name:"镜湖沉船",rec:"Lv.8 · 略有小成",desc:"水下沉船每次涨潮都会改变舱室。限时气息、机关与水寨旧人共同守着货单。",enemy:"pirateChief",routes:[
+    {id:"dive",name:"潜水入舱",desc:"避开巡船，考验身法和避水道具。",env:"水压与缆绳"},
+    {id:"trade",name:"伪装货商",desc:"以商路关系进入水寨。",env:"酒坛与吊桥"},
+    {id:"storm",name:"借风强攻",desc:"高风险正面登船。",env:"雷雨与桅杆"}],drops:["镜湖潮痕套装","湖蚕丝","避水灯"],achievement:"湖底明灯"},
+  yanmenFort:{name:"雁门旧垒",rec:"Lv.14 · 融会贯通",desc:"弃城令与阵亡册互相矛盾。你可守城、潜入军库，或在军阵前公开证据。",enemy:"borderCommander",routes:[
+    {id:"defend",name:"重燃烽燧",desc:"修城、守门、保护平民。",env:"烽火与滚木"},
+    {id:"infiltrate",name:"雪沟潜入",desc:"找到被涂改的军令原件。",env:"雪沟与暗门"},
+    {id:"duel",name:"阵前问刀",desc:"以决斗迫使主将答话。",env:"战鼓与拒马"}],drops:["雁门烽雪套装","雁翎旧箭","百炼装备"],achievement:"旧垒新火"},
+  tianjiVault:{name:"天机秘府",rec:"Lv.20 · 炉火纯青",desc:"房间会在身后转动。随机谜室、古弩与两阶段守府机兽等待闯入者。",enemy:"clockworkBeast",routes:[
+    {id:"stars",name:"循星轨",desc:"破解星图谜题，房间更少。",env:"转轮与星镜"},
+    {id:"gears",name:"逆齿轮",desc:"拆除机关换取材料。",env:"巨齿与熔炉"},
+    {id:"chaos",name:"走无门路",desc:"随机房间更多，也可能撞见隐藏库。",env:"随机秘室"}],drops:["天机遗构套装","神兵线索","照夜璧残光"],achievement:"天机可破"}
+};
+
+const ENEMIES={
+  dockThugs:{name:"河埠蒙面客",level:2,hp:86,attack:13,defense:5,weak:"破甲与交涉",resist:"定身",background:"他们穿着漕帮草鞋，却不会说漕工行话。",moves:["短刀斜劈","抛沙","合围"],negotiable:true},
+  crowAssassin:{name:"鸦纹刺客",level:6,hp:105,attack:14,defense:8,weak:"灼烧；第二阶段惧怕观察",resist:"中毒",background:"袖口鸦纹并非门派标记，而是官造墨印。",moves:["飞羽钉","掠檐斩","封喉线"],boss:true,phase2:{name:"摘下面具的周奎",hp:70,attack:18,defense:6,moves:["血誓连斩","毁证火","困兽一搏"],hint:"他开始频繁护住左肋，那里藏着真正的账页。"},negotiable:true},
+  templeKiller:{name:"破庙无影客",level:5,hp:125,attack:17,defense:8,weak:"揭露谎言后防御降低",resist:"寒冷",background:"凶手的鞋底过于干净，因为他早已躲在庙中。",moves:["烛灭刀","梁上落","灭口"],boss:true,phase2:{name:"无影客·穷途",hp:80,attack:21,defense:5,moves:["泼油","挟持","夺门"],hint:"朽梁已被刀气震松，或许能借环境压住他。"},negotiable:true},
+  pirateChief:{name:"镜湖水魁·韩七",level:11,hp:210,attack:24,defense:12,weak:"寒冷与唐云栖的旧名",resist:"定身",background:"他曾救过一船难民，也曾把另一船卖给官府。",moves:["分水刺","掀浪","钩索"],boss:true,phase2:{name:"韩七·怒潮",hp:150,attack:29,defense:10,moves:["沉船令","连环水刺","同归于尽"],hint:"桅杆每次受击都会开裂，可在他蓄势时斩断。"},negotiable:true},
+  borderCommander:{name:"旧垒都监·程烈",level:17,hp:280,attack:31,defense:17,weak:"雁翎旧箭与弃城令",resist:"眩晕",background:"他执行过错误军令，却用半生守住幸存者。",moves:["军阵枪","喝令","铁壁"],boss:true,phase2:{name:"程烈·卸甲",hp:190,attack:37,defense:12,moves:["孤枪","祭旗","最后军令"],hint:"卸甲后攻势猛烈，但旧伤让他的命中逐回合下降。"},negotiable:true},
+  clockworkBeast:{name:"守府机兽·狴犴",level:23,hp:370,attack:39,defense:23,weak:"破甲、机关环境",resist:"中毒与流血",background:"它只惩罚心怀夺取之念的人，核心里存着铸造者遗言。",moves:["铜爪","星火喷吐","齿轮碾压"],boss:true,phase2:{name:"狴犴·赤芯",hp:260,attack:47,defense:16,moves:["熔芯射线","全室轮转","裁决"],hint:"赤芯亮起时，镜面会反射它自己的火线。"}},
+  weiWuming:{name:"照骨楼主·魏无明",level:22,hp:300,attack:30,defense:18,weak:"真相、信任与神兵意志",resist:"虚弱",background:"他想结束所有争夺，方法是让所有人失去选择。",moves:["照骨印","夺念","折光剑"],boss:true,phase2:{name:"魏无明·执璧",hp:210,attack:36,defense:14,moves:["万象同寂","旧案回声","照夜无明"],hint:"照夜璧会放大执念。回顾履历或呼唤仍信任你的人，能动摇光幕。"},negotiable:true},
+  roadBandits:{name:"栖霞山匪",level:9,hp:160,attack:21,defense:10,weak:"声望与威慑",resist:"流血",background:"饥荒把庄稼人逼成了山匪。",moves:["朴刀","绊马索","乱箭"],negotiable:true}
+};
+
+const STORY={
+  p0:{chapter:"序章 · 初入江湖",place:"汴河埠头",title:"雨落汴河",text:"宣和年间，汴河涨水。你抵京的第一夜，一艘无灯客船撞上石埠。少年从舱底跃出，怀中抱着一只封死的木匣；三名蒙面客紧随其后，靴底却沾着皇城司才用的青灰。\n\n少年看见你，没有求救，只把木匣往怀里按得更紧。",options:[
+    {label:"横身拦住蒙面客",next:"p1",effects:{personality:{benevolence:2},stats:{chivalry:2},relation:{linQue:{favor:3,trust:1}},log:"你在汴河埠头替陌生少年挡下追兵。"}},
+    {label:"先问少年木匣里是什么",next:"p1",effects:{personality:{scheme:2},relation:{linQue:{favor:-1,trust:2}},world:{askedBox:true},log:"你先问代价，再决定是否出手。"}},
+    {label:"退入雨棚，观察双方脚印",next:"p1",effects:{personality:{freedom:1},stats:{insight:1},world:{dockClue:true},log:"你发现追兵靴底沾有官造青灰。"}},
+    {label:"以知北游密语敲击栏杆",next:"p1",condition:{origin:"zhibeiyou"},hidden:true,effects:{relation:{yeShuang:{favor:2,trust:2}},world:{zbySignal:true},log:"知北游的暗哨记住了这声密语。"}}
+  ]},
+  p1:{chapter:"序章 · 初入江湖",place:"汴河埠头",title:"青灰与短刀",text:"蒙面客不答话，短刀齐出。少年借你影子退到石狮后，低声道：“若你能拖住他们十息，我便欠你一条命。”\n\n河水撞岸，系船铁链在风中荡起。",options:[
+    {label:"拔兵迎敌",action:"battle",enemy:"dockThugs",next:"p2",className:"combat"},
+    {label:"斩断系船铁链，逼他们散开",action:"battle",enemy:"dockThugs",next:"p2",effects:{world:{dockEnv:true}},className:"combat"},
+    {label:"喝破青灰来历，试探对方",check:{stat:"insight",min:11,success:"p2",failure:"p1_fail"},effects:{world:{exposedGray:true}}},
+    {label:"从灯影里绕到领头人身后",action:"battle",enemy:"dockThugs",next:"p2",condition:{school:"suimeng"},hidden:true,effects:{battleBuff:"hidden"}}
+  ]},
+  p1_fail:{chapter:"序章 · 初入江湖",place:"汴河埠头",title:"试探落空",text:"你只说对了一半。领头人短促一笑，刀背撞上你的肩。木匣在混乱中磕出一道缝，里面没有珠宝，只有一角烧焦的星图。",onEnter:{stats:{hp:-12},world:{sawMap:true}},options:[
+    {label:"忍痛迎战",action:"battle",enemy:"dockThugs",next:"p2",className:"combat"},
+    {label:"护住星图，带少年跳入货船",next:"p2",effects:{personality:{freedom:2},relation:{linQue:{favor:2,trust:1}}}}
+  ]},
+  p2:{chapter:"序章 · 初入江湖",place:"州桥夜市",title:"半枚铜铃",text:"追兵退去后，少年自称林鹊。他掰开木匣，露出烧焦星图与半枚铜铃：“我爹死前只说，去州桥找一个肯先救人、再问价的人。”\n\n远处巡夜梆子响了三更。你不知道自己是否合他口中的标准，但这桩事已经认得你的名字。",onEnter:{achievement:"prologue",quest:{id:"main",name:"照夜旧案",stage:"去州桥追查木匣来历"},stats:{xp:50,cultivation:30},items:{smallPill:2,page:1}},options:[
+    {label:"与林鹊同去州桥",next:"c1_0",effects:{relation:{linQue:{favor:2,trust:2}}}},
+    {label:"先把木匣交给大理寺",next:"c1_0",effects:{personality:{scheme:1},relation:{guLin:{favor:2,trust:1}},world:{informedYamen:true}}},
+    {label:"暂时分开，约在晨市见",next:"c1_0",effects:{personality:{freedom:2},relation:{linQue:{favor:-1,trust:1}}}}
+  ]},
+  c1_0:{chapter:"第一章 · 汴京迷局",place:"州桥夜市",title:"灯市无灯",text:"州桥仍有酒气与炊烟，唯独售灯的“陆三娘”摊位一片漆黑。摊后的茶盏尚温，地上却散着三样不相干的东西：半张漕运票、一根鸦羽、以及沾了药味的红线。\n\n顾临川带着大理寺差役赶到，第一句话便是：“从现在起，谁也别碰。”",options:[
+    {label:"查看漕运票的水印",next:"c1_1",effects:{world:{clueTicket:true},relation:{guLin:{trust:2}}}},
+    {label:"嗅辨红线上的药味",next:"c1_1",effects:{world:{clueMedicine:true},relation:{wenJiu:{trust:1}}}},
+    {label:"问邻摊小贩昨夜所见",next:"c1_1",effects:{world:{clueWitness:true},stats:{reputation:1}}},
+    {label:"认出旧官署的裁票手法",next:"c1_1",condition:{origin:"noble"},hidden:true,effects:{world:{clueOfficial:true},stats:{insight:2}}}
+  ]},
+  c1_1:{chapter:"第一章 · 汴京迷局",place:"州桥夜市",title:"各取所需",text:"线索都指向城西废弃的丰乐仓。顾临川想依法封仓，林鹊担心陆三娘活不到天亮；四海栈少主苏砚舟则送来口信，说仓库今晚会转运一批“不能见光的旧货”。\n\n三条路都讲得通，代价各不相同。",options:[
+    {label:"随顾临川申请封仓公文",next:"c1_2",effects:{personality:{scheme:1},relation:{guLin:{favor:2,trust:3}},world:{routeLaw:true}}},
+    {label:"与林鹊翻墙先救人",next:"c1_2",check:{stat:"agility",min:12,success:"c1_2",failure:"c1_wallFail"},effects:{personality:{benevolence:1,freedom:1},world:{routeRescue:true}}},
+    {label:"搭苏砚舟的货车混入",next:"c1_2",effects:{personality:{scheme:2},relation:{suYuan:{favor:2,trust:2}},world:{routeTrade:true}}},
+    {label:"用飞索越过仓墙",next:"c1_2",condition:{item:"rope"},hidden:true,effects:{world:{routeRope:true},stats:{agility:1}}}
+  ]},
+  c1_wallFail:{chapter:"第一章 · 汴京迷局",place:"丰乐仓外",title:"墙头碎瓦",text:"旧墙比想象中更脆。你踏落半片青瓦，惊动巡哨，还在掌心划开一道口子。好在林鹊故意把人引向另一边，你们仍从排水沟钻进仓内，只是失了先手。",onEnter:{stats:{hp:-16},relation:{linQue:{favor:1,trust:2}},world:{alarm:true}},options:[{label:"沿排水沟继续前行",next:"c1_2"}]},
+  c1_2:{chapter:"第一章 · 汴京迷局",place:"丰乐仓",title:"鸦纹账页",text:"丰乐仓里没有陆三娘，只有一桌还没烧完的账。账页记着十七年前一批“照夜石”从边关转入汴京，押运人名全被挖去。\n\n屋脊传来瓦响。鸦纹刺客抛下火折，转身便走。火势与追凶，只能先顾一头。",options:[
+    {label:"扑灭账页上的火",next:"c1_3",effects:{personality:{scheme:1},world:{savedLedger:true},relation:{guLin:{trust:3}}}},
+    {label:"追上屋脊，不让刺客离开",next:"c1_3",effects:{personality:{obsession:2},world:{chasedAssassin:true},stats:{agility:1}}},
+    {label:"先破开内室救人",next:"c1_3",effects:{personality:{benevolence:2},world:{savedLu:true},stats:{chivalry:3},relation:{linQue:{trust:2}}}},
+    {label:"以弦音震落火折并锁住退路",next:"c1_3",condition:{school:"shenxiang"},hidden:true,effects:{world:{savedLedger:true,savedLu:true},stats:{reputation:2}}}
+  ]},
+  c1_3:{chapter:"第一章 · 汴京迷局",place:"丰乐仓屋脊",title:"乌瓦惊鸦",text:"刺客终于在仓脊尽头停下。他摘下面巾，竟是皇城司失踪多年的校尉周奎。“你们查的不是宝，是一份会让许多忠臣变成罪人的名单。”\n\n他左肋微微僵硬，袖中却已亮出第二把刀。",options:[
+    {label:"逼他交出账页",action:"battle",enemy:"crowAssassin",next:"c1_after",className:"combat"},
+    {label:"说出你查到的青灰与官印",action:"battle",enemy:"crowAssassin",next:"c1_after",effects:{world:{bossEvidence:true}},className:"combat"},
+    {label:"许诺保全名单上仍活着的人",action:"battle",enemy:"crowAssassin",next:"c1_after",effects:{world:{bossMercy:true},personality:{benevolence:2}},className:"combat"}
+  ]},
+  c1_after:{chapter:"第一章 · 汴京迷局",place:"栖霞旧宅",title:"一处可归之地",text:"周奎留下的残页把线索指向雁门旧垒。陆三娘若获救，便把城外栖霞岭的一座旧宅交给你看守；若她未能生还，顾临川也会把这处查封产业暂借给你。\n\n院里有荒药圃、断炉和一间上锁的地下室。林鹊把木匣搁在桌上：“至少以后逃命，有地方吃碗热饭。”",onEnter:{achievement:"chapter1",unlockFort:true,stats:{xp:180,cultivation:110,level:3,wealth:80},equipment:"eq_0_2",items:{herb:3,iron:3,page:2},quest:{id:"main",name:"照夜旧案",stage:"北上雁门，重查弃城令"}},options:[
+    {label:"修整一夜，启程北上",next:"c2_0"},
+    {label:"先查看新解锁的福地",action:"open",panel:"fort",next:"c2_0"},
+    {label:"向流派师长请教鸦纹刀势",next:"c2_0",effects:{relation:{muHanshan:{favor:2,trust:2}},stats:{cultivation:25}}}
+  ]},
+  c2_0:{chapter:"第二章 · 边关旧案",place:"雁门雪道",title:"旧垒无名碑",text:"雁门风像钝刀。萧砚真在旧垒外等你，脚边立着三百块没有名字的木牌。她说当年并非战败，而是有人故意晚送一道军令，好让押运照夜石的队伍从乱军中消失。\n\n负责执行弃城令的程烈仍守在废垒，从未为自己辩解。",options:[
+    {label:"先守住今夜来袭的马匪",next:"c2_1",effects:{world:{borderRoute:"defend"},personality:{benevolence:1},relation:{xiaoYanzhen:{favor:3,trust:2}}}},
+    {label:"潜入军库寻找原始军令",next:"c2_1",effects:{world:{borderRoute:"infiltrate"},personality:{scheme:2},stats:{insight:1}}},
+    {label:"阵前质问程烈",next:"c2_1",effects:{world:{borderRoute:"duel"},personality:{obsession:1},stats:{reputation:2}}},
+    {label:"用雁翎旧箭核对督造印",next:"c2_1",condition:{origin:"soldier"},hidden:true,effects:{world:{borderProof:true},relation:{xiaoYanzhen:{trust:3}}}}
+  ]},
+  c2_1:{chapter:"第二章 · 边关旧案",place:"雁门旧垒",title:"弃城令",text:"你找到的军令有两层墨：上层命程烈弃城，下层却是让他死守三日。改令者来自汴京，印章属于已经“病逝”的太常少卿。\n\n程烈提枪走下城头。他承认执行了上层命令，却说那让三百军士换得两千百姓出关。",options:[
+    {label:"以武逼他交出押运名册",action:"battle",enemy:"borderCommander",next:"c2_after",className:"combat"},
+    {label:"公开两层墨的证据",action:"battle",enemy:"borderCommander",next:"c2_after",effects:{world:{borderEvidence:true}},className:"combat"},
+    {label:"先问那两千百姓如今何在",action:"battle",enemy:"borderCommander",next:"c2_after",effects:{world:{askedSurvivors:true},personality:{benevolence:2}},className:"combat"}
+  ]},
+  c2_after:{chapter:"第二章 · 边关旧案",place:"雁门关",title:"烽火有名",text:"押运名册最后一页写着：照夜石并非宝石，而是一座能记录并放大人心执念的古代机枢。残件已被送往镜湖与天机秘府。\n\n萧砚真要把三百人的名字刻回碑上；朝廷使者却催你立即封存证据。",onEnter:{stats:{xp:260,cultivation:160,level:4},items:{page:2,oldArrow:1},relation:{xiaoYanzhen:{favor:2,trust:2}},quest:{id:"main",name:"照夜旧案",stage:"循水路追查镜湖沉船"}},options:[
+    {label:"帮萧砚真重刻名碑",next:"c3_0",effects:{stats:{chivalry:4,reputation:3},world:{namedFallen:true}}},
+    {label:"把原件交顾临川封存",next:"c3_0",effects:{relation:{guLin:{trust:4}},personality:{scheme:2},world:{sealedOrder:true}}},
+    {label:"复制两份，分别交给军民",next:"c3_0",effects:{personality:{scheme:1,freedom:1},world:{spreadOrder:true},stats:{notoriety:2,reputation:2}}}
+  ]},
+  c3_0:{chapter:"第三章 · 秘宝之争",place:"镜湖渡口",title:"沉船与旧友",text:"镜湖水寨、四海栈和皇城司都在打捞同一艘沉船。唐云栖见到水寨旗号时脸色发白：她曾是寨中二当家，也是唯一知道沉船暗舱入口的人。\n\n她愿带路，但要求你保证，不把水寨老弱交给官府邀功。",options:[
+    {label:"答应她，罪证只追首恶",next:"c3_1",effects:{relation:{tangYun:{favor:4,trust:4}},personality:{benevolence:1},world:{protectWaterfolk:true}}},
+    {label:"只承诺依法核实每个人",next:"c3_1",effects:{relation:{guLin:{trust:2},tangYun:{favor:-1,trust:1}},world:{lawWaterfolk:true}}},
+    {label:"不做承诺，但让她共同保管证据",next:"c3_1",effects:{relation:{tangYun:{trust:3}},personality:{freedom:1},world:{sharedEvidence:true}}},
+    {label:"出示水路商券，先买下沉船打捞权",next:"c3_1",condition:{origin:"merchant"},hidden:true,effects:{stats:{wealth:-80},relation:{suYuan:{trust:3}},world:{boughtWreck:true}}}
+  ]},
+  c3_1:{chapter:"第三章 · 秘宝之争",place:"镜湖沉船",title:"水下星舱",text:"暗舱里不是金银，而是一枚会随呼吸明灭的黑色玉片。它映出你一路做过的选择：被放走的人、没来得及救的人、交出的证据与藏下的谎。\n\n魏无明隔着水幕开口：“你看，天下并不需要真相，只需要一个足够强的人替他们选择。”",options:[
+    {label:"带走玉片，但拒绝让它读取记忆",next:"c3_2",effects:{items:{mirrorShard:1},personality:{freedom:2},world:{resistedShard:true}}},
+    {label:"让玉片显出十七年前最后一幕",next:"c3_2",effects:{items:{mirrorShard:1,starMap:1},personality:{obsession:2},world:{sawOldTruth:true}}},
+    {label:"当场击碎玉片",next:"c3_2",effects:{stats:{chivalry:2},world:{brokeShard:true},relation:{weiWuming:{favor:-3,trust:1}}}},
+    {label:"以潮光踏入倒影",next:"c3_2",condition:{school:"chaoguang"},hidden:true,effects:{world:{mirrorPath:true,sawOldTruth:true},stats:{insight:3}}}
+  ]},
+  c3_2:{chapter:"第三章 · 秘宝之争",place:"镜湖水寨",title:"三方夜谈",text:"出水后，顾临川要证据，苏砚舟要货单，唐云栖要乡亲平安。三人的要求彼此冲突，却都不是恶意。\n\n你只有一份沉船名册。交给谁，谁就掌握下一步主动。",options:[
+    {label:"交顾临川，换取合法搜查天机秘府",next:"c3_after",effects:{relation:{guLin:{favor:3,trust:4},suYuan:{trust:-2}},world:{faction:"court"}}},
+    {label:"交苏砚舟，切断照骨楼的银钱",next:"c3_after",effects:{relation:{suYuan:{favor:3,trust:4},guLin:{trust:-2}},world:{faction:"merchant"}}},
+    {label:"交唐云栖，让水寨自证清白",next:"c3_after",effects:{relation:{tangYun:{favor:4,trust:4}},world:{faction:"folk"}}},
+    {label:"记下内容后烧掉名册",next:"c3_after",effects:{personality:{scheme:2,freedom:1},world:{faction:"self",burnedManifest:true}}}
+  ]},
+  c3_after:{chapter:"第三章 · 秘宝之争",place:"栖霞福地",title:"照夜来信",text:"福地地下室的锁在玉片靠近时自行打开。里面只有一封鹤照隐留下的旧信：照夜璧若重组，会把持有者最深的执念扩散给周围所有人。\n\n真正的秘宝不是力量，而是让一座城相信“只有一个答案”。",onEnter:{stats:{xp:300,cultivation:210,level:5},items:{page:3,timber:3},world:{fortSecret:true},quest:{id:"main",name:"照夜旧案",stage:"进入天机秘府，阻止照夜璧重组"}},options:[
+    {label:"召集仍信任你的伙伴",next:"c4_0",effects:{world:{calledAllies:true}}},
+    {label:"只身前往，免得牵连旁人",next:"c4_0",effects:{personality:{freedom:2},world:{wentAlone:true}}},
+    {label:"先研读《息兵问心篇》",next:"c4_0",condition:{item:"hiddenManual"},hidden:true,effects:{world:{peaceMind:true},stats:{insight:2,cultivation:40}}}
+  ]},
+  c4_0:{chapter:"第四章 · 天下抉择",place:"天机秘府",title:"万门轮转",text:"天机秘府像一架埋在山腹里的巨大钟表。魏无明已将三枚玉片嵌入机枢，只缺林鹊体内那半幅星图。\n\n林鹊被困在中央光幕里，却冲你喊：“别先救我！先停轮轴，否则整座汴京都会听见他的念头。”",onEnter:{stats:{xp:250,cultivation:140,level:5},items:{bigPill:2,spiritTea:2}},options:[
+    {label:"先停轮轴，再救林鹊",next:"c4_1",effects:{personality:{scheme:1},world:{stoppedMachine:true},relation:{linQue:{favor:-1,trust:3}}}},
+    {label:"先破光幕救人",next:"c4_1",effects:{personality:{benevolence:2},world:{savedLinFirst:true},relation:{linQue:{favor:4,trust:2}}}},
+    {label:"让伙伴分头行动",next:"c4_1",condition:{relationTrust:18},hidden:true,effects:{world:{stoppedMachine:true,savedLinFirst:true,alliesWorked:true}}},
+    {label:"前世里我已见过这道轮轴",next:"c4_1",condition:{ngPlus:true},hidden:true,effects:{world:{memoryAwake:true,stoppedMachine:true},achievement:"oldDream"}}
+  ]},
+  c4_1:{chapter:"第四章 · 天下抉择",place:"天机秘府",title:"照骨之问",text:"魏无明没有立刻出手。他让照夜璧映出旧案真相：十七年前，朝堂与武林共同牺牲一支押运队，阻止秘宝落入外敌；幸存者则被灭口，以维持所谓大局。\n\n“若公开真相，天下会乱；若埋葬真相，亡者永无姓名。你凭什么替他们选？”",options:[
+    {label:"我不替天下选，我只让天下知道代价",next:"c4_boss",effects:{personality:{benevolence:1,freedom:2},world:{truthChoice:"public",fullTruth:true},achievement:"truth"}},
+    {label:"秩序不能靠谎言，但揭露需要时机",next:"c4_boss",effects:{personality:{scheme:2},world:{truthChoice:"controlled",fullTruth:true}}},
+    {label:"死者需要公道，活人也需要明天",next:"c4_boss",effects:{personality:{benevolence:2},world:{truthChoice:"reconcile",fullTruth:true}}},
+    {label:"这一次，我拒绝照前世给出的答案",next:"c4_boss",condition:{ngPlus:true},hidden:true,effects:{world:{truthChoice:"break",memoryAwake:true,fullTruth:true}}}
+  ]},
+  c4_boss:{chapter:"第四章 · 天下抉择",place:"照夜机枢",title:"谁执长夜",text:"照夜光起，所有人的执念都被放大。魏无明身后浮出无数旧案亡者的影子，机枢开始把他的意志送向汴京。\n\n神兵、证词、关系与一路选择，都将在这一战中回应你。",options:[
+    {label:"踏入光中，阻止魏无明",action:"battle",enemy:"weiWuming",next:"c5_0",className:"combat"},
+    {label:"呼唤仍愿信任你的人",action:"battle",enemy:"weiWuming",next:"c5_0",effects:{world:{allyCall:true}},className:"combat"},
+    {label:"以《息兵问心篇》回应他的执念",action:"battle",enemy:"weiWuming",next:"c5_0",condition:{item:"hiddenManual"},hidden:true,effects:{world:{bossPeace:true}},className:"combat"}
+  ]},
+  c5_0:{chapter:"第五章 · 余波",place:"照夜机枢",title:"天将破晓",text:"机枢停了。照夜璧落在你手中，温热得像一颗仍在犹豫的心。顾临川、萧砚真、苏砚舟与林鹊各站在不同方向，没人催促你。\n\n江湖真正记住的，从来不只是你击败了谁，而是最后把选择交给了什么。",onEnter:{stats:{xp:500,cultivation:300,level:3},quest:{id:"main",name:"照夜旧案",stage:"已到终局"}},options:[
+    {label:"公开真相，把照夜璧交给共同见证",action:"ending",direction:"public"},
+    {label:"封印照夜璧，成为守灯人",action:"ending",direction:"seal"},
+    {label:"掌握照夜璧，以力量终结争夺",action:"ending",direction:"power"},
+    {label:"毁掉记录，带幸存者离开",action:"ending",direction:"leave"},
+    {label:"借商路分散秘宝残件",action:"ending",direction:"trade",condition:{wealth:700},hidden:true},
+    {label:"拆毁制造“唯一答案”的机枢",action:"ending",direction:"break",condition:{ngPlus:true},hidden:true}
+  ]}
+};
+
+function defaultRelations(){
+  const out={}; Object.entries(NPCS).forEach(([id,n])=>out[id]={favor:0,trust:0,stance:n.stance,status:"未相识"}); return out;
+}
+function blankGear(){const g={};SLOTS.forEach(s=>g[s]=null);return g}
+function freshState(seed={}){
+  const baseStats={hpMax:115,hp:115,mpMax:70,mp:70,attack:16,defense:9,agility:9,crit:7,hit:88,break:4,healing:4,luck:6,insight:7,reputation:0,chivalry:0,notoriety:0,wealth:80,energyMax:100,energy:100,xp:0,cultivation:0};
+  return {version:VERSION,run:seed.run||1,startedAt:Date.now(),playSeconds:0,node:"p0",player:{name:"",gender:"",look:"",title:"",origin:"",school:"",level:1,realm:0,stats:baseStats,permanentWound:0},
+    personality:{benevolence:0,scheme:0,freedom:0,obsession:0},inventory:{equipment:[],items:{smallPill:2,spiritTea:1},capacity:24,warehouse:[]},gear:blankGear(),
+    relations:defaultRelations(),quests:{main:{name:"尚未启程",stage:"完成角色创建",status:"进行中"}},world:{entered:{},regions:["汴京"],factions:{court:0,merchant:0,folk:0,jianghu:0},weather:"雨夜",time:"三更",currentDungeon:null,fullTruth:false},
+    fort:{unlocked:false,level:0,herbs:0,visitors:[],rooms:[],beastCare:0,dispatches:0},dungeons:{},achievements:[],endings:[],history:[],adventures:[],battleWins:0,flees:0,heals:0,itemsFound:0,failures:0,
+    settings:{font:16,reduceMotion:false,sound:false,randomEncounters:true},battle:null,lastNode:"p0",lastChanges:[],ngMemory:seed.ngMemory||0,inheritTalent:seed.inheritTalent||null};
+}
+let state=null, creatorData={step:1,origin:null,school:null}, meta=loadMeta(), playTimer=null;
+function loadMeta(){
+  try{return Object.assign({achievements:[],endings:[],runs:0,collection:[],memory:0},JSON.parse(localStorage.getItem(META_KEY)||"{}"))}catch(e){return {achievements:[],endings:[],runs:0,collection:[],memory:0}}
+}
+function saveMeta(){try{localStorage.setItem(META_KEY,JSON.stringify(meta))}catch(e){}}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
+function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function chance(p){return Math.random()<p}
+function deepClone(o){return JSON.parse(JSON.stringify(o))}
+function statName(k){return ({hp:"气血",hpMax:"气血上限",mp:"内力",mpMax:"内力上限",attack:"攻击",defense:"防御",agility:"身法",crit:"会心",hit:"命中",break:"破防",healing:"治疗",luck:"幸运",insight:"悟性",reputation:"声望",chivalry:"侠义",notoriety:"恶名",wealth:"财富",energy:"精力",energyMax:"精力上限",xp:"阅历",cultivation:"修为"}[k]||k)}
+function getItemCount(id){return state.inventory.items[id]||0}
+function addItem(id,n=1){
+  if(!ITEMS[id])return;
+  state.inventory.items[id]=(state.inventory.items[id]||0)+n;
+  if(state.inventory.items[id]<=0)delete state.inventory.items[id];
+  if(n>0){state.itemsFound+=n;state.lastChanges.push(`${ITEMS[id].name} ×${n}`)}
+}
+function hasItem(id){return getItemCount(id)>0}
+function makeEquipment(id){
+  const base=EQUIPMENT_DB[id]; if(!base)return null;
+  const affixKeys=["attack","defense","agility","crit","hit","break","healing","luck","insight","hpMax"];
+  const q=QUALITIES.indexOf(base.quality), key=affixKeys[rand(0,affixKeys.length-1)];
+  return {uid:`${id}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,id,enhance:0,durability:100,locked:false,affixes:{[key]:Math.max(1,Math.floor((q+1)*1.4))}};
+}
+function addEquipment(id){
+  const eq=makeEquipment(id);if(!eq)return;
+  state.inventory.equipment.push(eq);state.itemsFound++;state.lastChanges.push(`获得${EQUIPMENT_DB[id].name}`);
+  if(EQUIPMENT_DB[id].quality==="百炼")unlockAchievement("hundredForge");
+  if(EQUIPMENT_DB[id].quality==="神兵")unlockAchievement("godWeapon");
+}
+function totalStats(){
+  const s={...state.player.stats};
+  Object.values(state.gear).filter(Boolean).forEach(eq=>{
+    const base=EQUIPMENT_DB[eq.id]; if(!base)return;
+    Object.entries(base.base).forEach(([k,v])=>s[k]=(s[k]||0)+v+eq.enhance);
+    Object.entries(eq.affixes||{}).forEach(([k,v])=>s[k]=(s[k]||0)+v);
+  });
+  const sets=setCounts();Object.entries(sets).forEach(([id,n])=>{if(n>=2){if(id==="patrol")s.hit+=4;if(id==="tide")s.agility+=4;if(id==="yanmen")s.defense+=5;if(id==="tianji")s.break+=5}});
+  return s;
+}
+function setCounts(){const c={};Object.values(state.gear).filter(Boolean).forEach(eq=>{const set=EQUIPMENT_DB[eq.id]?.set;if(set)c[set]=(c[set]||0)+1});return c}
+function itemSlotsUsed(){return state.inventory.equipment.length+Object.keys(state.inventory.items).length}
+function applyOriginAndSchool(){
+  const o=ORIGINS[state.player.origin], sc=SCHOOLS[state.player.school], s=state.player.stats;
+  Object.entries(o.stats).forEach(([k,v])=>{s[k]=(s[k]||0)+v;if(k==="hpMax")s.hp+=v;if(k==="mpMax")s.mp+=v});
+  Object.entries(sc.stats).forEach(([k,v])=>{s[k]=(s[k]||0)+v;if(k==="hpMax")s.hp+=v;if(k==="mpMax")s.mp+=v});
+  Object.entries(o.relation||{}).forEach(([id,d])=>Object.entries(d).forEach(([k,v])=>state.relations[id][k]+=v));
+  const originMap={noble:"yamenBadge",soldier:"oldArrow",merchant:"tradeToken",healer:"needleBox",orphan:"copperBell",hermit:"blankPage",zhibeiyou:"zhibeiyouToken"};
+  addItem(originMap[state.player.origin],1);
+  addEquipment(`eq_0_${["tieyi","suwen","suimeng","shenxiang","jiuling","xuehe","canglan","xuanji","hongyin","chaoguang","longyin"].indexOf(state.player.school)%2}`);
+}
+
+function applyEffects(effects={},source=""){
+  state.lastChanges=[];
+  if(effects.stats)Object.entries(effects.stats).forEach(([k,v])=>{
+    const s=state.player.stats;if(k==="level"){
+      state.player.level=Math.max(1,state.player.level+v);s.hpMax+=v*7;s.mpMax+=v*3;s.attack+=v*2;s.defense+=v;s.hp=s.hpMax;s.mp=s.mpMax;state.lastChanges.push(`等级 ${state.player.level}`)
+    }
+    else{s[k]=(s[k]||0)+v;if(k==="hp")s.hp=clamp(s.hp,1,totalStats().hpMax);if(k==="mp")s.mp=clamp(s.mp,0,totalStats().mpMax);if(k==="wealth")s.wealth=Math.max(0,s.wealth);state.lastChanges.push(`${statName(k)} ${v>=0?"+":""}${v}`)}
+  });
+  if(effects.personality)Object.entries(effects.personality).forEach(([k,v])=>state.personality[k]=(state.personality[k]||0)+v);
+  if(effects.relation)Object.entries(effects.relation).forEach(([id,vals])=>{if(!state.relations[id])return;Object.entries(vals).forEach(([k,v])=>{state.relations[id][k]=clamp(state.relations[id][k]+v,-100,100);state.lastChanges.push(`${NPCS[id].name}${k==="favor"?"好感":"信任"} ${v>=0?"+":""}${v}`)});state.relations[id].status="已相识"});
+  if(effects.world)Object.assign(state.world,effects.world);
+  if(effects.items)Object.entries(effects.items).forEach(([id,n])=>addItem(id,n));
+  if(effects.equipment)addEquipment(effects.equipment);
+  if(effects.quest)state.quests[effects.quest.id]={name:effects.quest.name,stage:effects.quest.stage,status:"进行中"};
+  if(effects.unlockFort){state.fort.unlocked=true;state.fort.level=Math.max(1,state.fort.level);state.fort.rooms=["药圃"];state.lastChanges.push("福地已解锁")}
+  if(effects.achievement)unlockAchievement(effects.achievement);
+  if(effects.log)addHistory(effects.log);
+  if(effects.battleBuff)state.world.nextBattleBuff=effects.battleBuff;
+  checkLevel();checkAchievements();
+}
+function addHistory(text){state.history.push({time:Date.now(),chapter:STORY[state.node]?.chapter||"江湖",text});if(state.history.length>80)state.history.shift()}
+function checkLevel(){
+  const s=state.player.stats;const target=Math.min(30,1+Math.floor(s.xp/110));
+  if(target>state.player.level){const d=target-state.player.level;state.player.level=target;s.hpMax+=d*7;s.mpMax+=d*3;s.attack+=d*2;s.defense+=d;s.hp=s.hpMax;s.mp=s.mpMax;toast(`升至 ${target} 级，气血内力已恢复`,"good")}
+}
+function personalityReading(){
+  const p=state.personality, arr=[["benevolence","心怀众生"],["scheme","善权衡局势"],["freedom","不受尘网"],["obsession","执念如炬"]].sort((a,b)=>p[b[0]]-p[a[0]]);
+  if(p[arr[0][0]]<3)return"尚在观心";
+  return `${arr[0][1]}，亦有${arr[1][1]}`;
+}
+function relationLabel(r){if(r.favor>=80&&r.trust>=80)return"生死之交";if(r.favor>=55&&r.trust>=55)return"挚友";if(r.favor>=40&&r.trust<10)return"单向倾慕";if(r.favor<0&&r.trust>30)return"利益合作";if(r.favor<-35)return"宿敌";if(r.trust<-30)return"决裂";if(r.trust>20)return"盟友";return r.status==="已相识"?"相识":"未相识"}
+function unlockAchievement(id){
+  if(!id||state.achievements.includes(id))return;
+  const a=ACHIEVEMENTS.find(x=>x.id===id);if(!a)return;
+  state.achievements.push(id);if(!meta.achievements.includes(id))meta.achievements.push(id);saveMeta();toast(`成就解锁 · ${a.name}`,"good");
+}
+function checkAchievements(){
+  if(state.battleWins>=1)unlockAchievement("firstBlood");
+  if(state.flees>=5)unlockAchievement("fleeFive");
+  if(state.heals>=10)unlockAchievement("healerTen");
+  if(state.player.stats.wealth>=1000)unlockAchievement("rich");
+  if(state.itemsFound>=40)unlockAchievement("collector");
+  if(state.adventures.length>=10)unlockAchievement("tenAdventures");
+  if(state.player.realm>=5)unlockAchievement("schoolMaster");
+  if(Object.values(state.dungeons).filter(d=>d.clears>0).length===4)unlockAchievement("allDungeons");
+  if(state.world.regions.length>=5)unlockAchievement("allRegions");
+  if(Object.values(state.relations).some(r=>r.favor>=80&&r.trust>=80))unlockAchievement("swornFriend");
+  if(state.fort.level>=7)unlockAchievement("fortOwner");
+  const sets=setCounts();if(Object.values(sets).some(n=>n>=4))unlockAchievement("setFour");
+}
+
+function conditionResult(c){
+  if(!c)return{ok:true};
+  if(c.origin&&state.player.origin!==c.origin)return{ok:false,reason:`出身限定：${ORIGINS[c.origin].name}`};
+  if(c.school&&state.player.school!==c.school)return{ok:false,reason:`流派限定：${SCHOOLS[c.school].name}`};
+  if(c.item&&!hasItem(c.item))return{ok:false,reason:`需要：${ITEMS[c.item]?.name||c.item}`};
+  if(c.ngPlus&&state.run<2)return{ok:false,reason:"二周目解锁"};
+  if(c.wealth&&state.player.stats.wealth<c.wealth)return{ok:false,reason:`需要财富 ${c.wealth}`};
+  if(c.relationTrust){const sum=Object.values(state.relations).reduce((n,r)=>n+Math.max(0,r.trust),0);if(sum<c.relationTrust)return{ok:false,reason:`伙伴总信任需达到 ${c.relationTrust}`}};
+  return{ok:true};
+}
+function resolveText(s){return String(s).replaceAll("{{name}}",state.player.name).replaceAll("{{title}}",state.player.title)}
+function enterNode(id){
+  if(!STORY[id]){console.warn("missing node",id);id="p0"}
+  state.lastNode=state.node;state.node=id;state.battle=null;
+  const node=STORY[id];
+  if(!state.world.entered[id]){state.world.entered[id]=true;if(node.onEnter)applyEffects(node.onEnter,`node:${id}`)}
+  if(node.place&&!state.world.regions.includes(node.place.split(/[·]/)[0]))state.world.regions.push(node.place.split(/[·]/)[0]);
+  addHistory(`抵达「${node.title}」`);
+  autoSave();render();
+}
+function chooseOption(index){
+  const node=STORY[state.node],opt=node.options[index];if(!opt)return;
+  const cond=conditionResult(opt.condition);if(!cond.ok){toast(cond.reason,"bad");return}
+  if(opt.effects)applyEffects(opt.effects,`choice:${state.node}:${index}`);
+  addHistory(opt.label);clickSound();
+  if(opt.check){
+    const stat=totalStats()[opt.check.stat]||0, bonus=hasItem("rope")&&opt.check.stat==="agility"?5:0;
+    const pass=stat+bonus>=opt.check.min;
+    toast(pass?`检定成功 · ${statName(opt.check.stat)} ${stat+bonus}`:`检定未过 · 转入另一条道路`,pass?"good":"bad");
+    enterNode(pass?opt.check.success:opt.check.failure);return;
+  }
+  if(opt.action==="battle"){startBattle(opt.enemy,opt.next);return}
+  if(opt.action==="open"){openPanel(opt.panel);if(opt.next)state.world.pendingNode=opt.next;return}
+  if(opt.action==="ending"){resolveEnding(opt.direction);return}
+  enterNode(opt.next);
+}
+
+function render(){
+  if(!state)return;
+  applySettings();updateStatus();
+  if(state.battle){renderBattle();return}
+  document.getElementById("battleArea").classList.add("hidden");document.getElementById("sceneArea").classList.remove("hidden");
+  const node=STORY[state.node]||STORY.p0;
+  document.getElementById("chapterKicker").textContent=node.chapter;
+  document.getElementById("sceneTitle").textContent=node.title;
+  document.getElementById("storyText").innerHTML=resolveText(node.text).split("\n").map((p,i)=>i===1?`<span class="dialogue">${esc(p)}</span>`:esc(p)).join("\n");
+  const del=document.getElementById("deltaLog");del.innerHTML=(state.lastChanges||[]).slice(-6).map(x=>`<span class="delta ${/[+-]-| -/.test(x)?"bad":"good"}">${esc(x)}</span>`).join("");
+  document.getElementById("choices").innerHTML=node.options.map((o,i)=>{
+    const c=conditionResult(o.condition), cls=[o.className||"",o.hidden?"hidden-choice":"",!c.ok?"locked":""].join(" ");
+    return `<button class="choice-btn ${cls}" data-choice="${i}" ${!c.ok?"disabled":""}>${esc(o.label)}${(!c.ok||o.hidden)?`<small>${esc(!c.ok?c.reason:"隐秘选项已解锁")}</small>`:""}</button>`;
+  }).join("");
+  document.querySelectorAll("[data-choice]").forEach(b=>b.onclick=()=>chooseOption(Number(b.dataset.choice)));
+  autoSave();
+}
+function updateStatus(){
+  const t=totalStats(),s=state.player.stats;
+  document.getElementById("avatar").textContent=(state.player.name||"侠").slice(0,1);
+  document.getElementById("statusName").textContent=`${state.player.name} · ${state.player.title}`;
+  document.getElementById("statusRealm").textContent=`Lv.${state.player.level} · ${REALMS[state.player.realm]}`;
+  document.getElementById("statusPlace").textContent=STORY[state.node]?.place||state.world.currentDungeon||"江湖";
+  document.getElementById("hpBar").style.width=`${clamp(s.hp/t.hpMax*100,0,100)}%`;document.getElementById("mpBar").style.width=`${clamp(s.mp/t.mpMax*100,0,100)}%`;
+  document.getElementById("hpLabel").textContent=`气血 ${Math.ceil(s.hp)}/${t.hpMax}`;document.getElementById("mpLabel").textContent=`内力 ${Math.ceil(s.mp)}/${t.mpMax}`;
+}
+
+function startBattle(enemyId,next,context=null){
+  const base=ENEMIES[enemyId];if(!base){toast("敌人数据缺失","bad");return}
+  const e=deepClone(base), difficulty=context?.difficulty||"normal", mult=difficulty==="hard"?1.28:difficulty==="extreme"?1.58:1;
+  e.hp=Math.round(e.hp*mult);e.hpMax=e.hp;e.attack=Math.round(e.attack*mult);e.defense=Math.round(e.defense*mult);
+  state.battle={enemyId,enemy:e,next,context,phase:1,turn:1,defending:false,observed:false,environmentUsed:false,enemyStatuses:{},playerStatuses:{},log:[`遭遇 ${e.name}。${e.background}`],gauge:0,ended:false};
+  if(state.world.nextBattleBuff){state.battle.playerStatuses.hidden={turns:2,power:20};delete state.world.nextBattleBuff}
+  if(enemyId==="weiWuming"&&state.world.allyCall){addStatus(state.battle.enemyStatuses,"weak",3,24);state.battle.log.push("仍信任你的同伴在光幕外回应，魏无明的意志出现裂隙。")}
+  render();
+}
+function statusHtml(obj){return Object.entries(obj).filter(([,v])=>v.turns>0).map(([k,v])=>`<span class="status-pill">${STATUS_NAMES[k]||k} ${v.turns}</span>`).join("")}
+function renderBattle(){
+  document.getElementById("sceneArea").classList.add("hidden");const area=document.getElementById("battleArea");area.classList.remove("hidden");
+  const b=state.battle,e=b.enemy,t=totalStats(),s=state.player.stats,school=SCHOOLS[state.player.school];
+  const skills=school.skills.map((sk,i)=>`<button class="btn skill-btn" data-battle="skill" data-skill="${i}" ${s.mp<sk[2]||hasStatus(b.playerStatuses,"stun")?"disabled":""}>${esc(sk[0])} · ${sk[2]} 内力<small>${skillDesc(sk)}</small></button>`).join("");
+  area.innerHTML=`<section class="scene"><div class="chapter-kicker">战斗 · 第 ${b.turn} 回合</div><h1>${esc(STORY[state.node]?.title||"江湖交锋")}</h1></section>
+    <div class="battle-box"><div class="enemy-head"><div class="enemy-icon">敌</div><div><b>${esc(e.name)}</b><small>Lv.${e.level} · ${esc(e.background)}</small></div><span class="phase">${e.boss?`阶段 ${b.phase}`:"交锋"}</span></div>
+    <div class="enemy-bar"><i style="width:${clamp(e.hp/e.hpMax*100,0,100)}%"></i></div><div class="enemy-hp-label">${Math.max(0,Math.ceil(e.hp))} / ${e.hpMax}</div>
+    <div class="status-row">${statusHtml(b.enemyStatuses)}</div><div class="battle-log">${b.log.slice(-8).map(x=>`<div>${x}</div>`).join("")}</div>
+    <div class="meta-line" style="margin-top:9px"><span class="tag">${esc(school.mechanic.split("：")[0])} ${b.gauge}/100</span><span class="tag">环境 ${b.environmentUsed?"已用":"可用"}</span><span class="tag">我方状态 ${Object.keys(b.playerStatuses).length}</span></div></div>
+    ${b.ended?renderBattleEnd():`<div class="battle-actions">
+      <button class="btn" data-battle="attack">普通攻击</button><button class="btn" data-battle="defend">防御</button>
+      <div class="skill-actions">${skills}</div>
+      <button class="btn" data-battle="item">使用道具</button><button class="btn" data-battle="observe">观察敌人</button>
+      <button class="btn" data-battle="talk">尝试交涉</button><button class="btn" data-battle="flee">逃跑</button>
+      <button class="btn primary" data-battle="environment" ${b.environmentUsed?"disabled":""}>环境行动</button>
+    </div>`}`;
+  area.querySelectorAll("[data-battle]").forEach(btn=>btn.onclick=()=>battleAction(btn.dataset.battle,Number(btn.dataset.skill)));
+  updateStatus();
+}
+function renderBattleEnd(){
+  const b=state.battle;if(b.victory)return `<div class="battle-actions"><button class="btn primary" data-battle="continue">收兵前行</button></div>`;
+  if(b.fled)return `<div class="battle-actions"><button class="btn primary" data-battle="fleeContinue">撤回原处</button></div>`;
+  return `<div class="battle-actions"><button class="btn" data-battle="load">读取自动存档</button>${b.context?.type==="dungeon"?`<button class="btn" data-battle="dungeonReturn">返回副本入口</button>`:""}<button class="btn danger" data-battle="die">接受此命</button></div>`;
+}
+function skillDesc(sk){
+  const type={attack:"伤害",heal:"疗愈",regen:"回春",cleanse:"净化",control:"控制",hidden:"隐匿",shield:"护盾",drain:"吸血"}[sk[1]]||"招式";
+  return `${type}${sk[4]?` · ${STATUS_NAMES[sk[4]]}`:""}`;
+}
+function hasStatus(obj,k){return obj[k]&&obj[k].turns>0}
+function addStatus(obj,k,turns=2,power=0){obj[k]={turns:Math.max(turns,obj[k]?.turns||0),power:Math.max(power,obj[k]?.power||0)}}
+function calcDamage(power=1,ignore=0){
+  const b=state.battle,t=totalStats(),s=state.player.stats,e=b.enemy;
+  let atk=t.attack*(hasStatus(b.playerStatuses,"weak") ? .7 : 1);
+  let def=e.defense*(hasStatus(b.enemyStatuses,"armorBreak") ? .65 : 1);
+  let dmg=Math.max(3,atk*power-def*.62+rand(-3,4));
+  const critChance=(t.crit+(hasStatus(b.playerStatuses,"hidden")?28:0)+b.gauge/8)/100;
+  const crit=chance(critChance);if(crit)dmg*=1.65;
+  dmg=Math.round(dmg+ignore);return{dmg,crit};
+}
+function hitEnemy(amount,label,status){
+  const b=state.battle,e=b.enemy;let dmg=amount;
+  if(hasStatus(b.enemyStatuses,"shield")){const sh=b.enemyStatuses.shield;const take=Math.min(sh.power,dmg);sh.power-=take;dmg-=take;b.log.push(`敌方护盾抵消 ${take} 点伤害。`);if(sh.power<=0)delete b.enemyStatuses.shield}
+  e.hp-=dmg;b.log.push(`${label}造成 <b>${Math.max(0,Math.round(dmg))}</b> 点伤害。`);
+  if(status&&chance(.72))addStatus(b.enemyStatuses,status,status==="stun"?1:2,Math.max(4,Math.floor(totalStats().attack*.18)));
+}
+function healPlayer(n,label){
+  const s=state.player.stats,t=totalStats(),amt=Math.round(n+totalStats().healing*1.5);s.hp=clamp(s.hp+amt,0,t.hpMax);state.heals++;state.battle.log.push(`${label}恢复 ${amt} 气血。`)
+}
+function battleAction(type,skillIndex){
+  const b=state.battle;if(!b)return;clickSound();
+  if(b.ended){
+    if(type==="continue"){battleContinue();return}
+    if(type==="fleeContinue"){const dungeon=b.context?.type==="dungeon"?b.context.id:null;state.battle=null;if(dungeon){const rec=state.dungeons[dungeon]||(state.dungeons[dungeon]={clears:0,best:null,intel:0});rec.intel++;openDungeon(dungeon)}else render();autoSave();return}
+    if(type==="load"){loadAuto();return}
+    if(type==="dungeonReturn"){const id=b.context.id,rec=state.dungeons[id]||(state.dungeons[id]={clears:0,best:null,intel:0});rec.intel++;state.battle=null;openDungeon(id);autoSave();return}
+    if(type==="die"){state.battle=null;endGame("death");return}
+  }
+  if(hasStatus(b.playerStatuses,"stun")&&type!=="item"){b.log.push("你仍在眩晕中，错失这一回合。");tickRound();enemyTurn();render();return}
+  b.defending=false;
+  if(type==="attack"){
+    const r=calcDamage(1);hitEnemy(r.dmg,r.crit?"会心一击":"普通攻击");b.gauge=clamp(b.gauge+18,0,100);
+  }else if(type==="defend"){
+    b.defending=true;addStatus(b.playerStatuses,"shield",1,Math.round(totalStats().defense*1.4+12));b.log.push("你沉肩守势，准备化解来招。");b.gauge=clamp(b.gauge+12,0,100);
+  }else if(type==="skill"){
+    const sk=SCHOOLS[state.player.school].skills[skillIndex];if(!sk||state.player.stats.mp<sk[2])return;
+    state.player.stats.mp-=sk[2];useSkill(sk);b.gauge=clamp(b.gauge+26,0,100);if(b.gauge>=100)triggerSchoolMechanic();
+  }else if(type==="observe"){
+    b.observed=true;b.log.push(`<span class="hint">观察：弱点为${esc(b.enemy.weak)}；抗性为${esc(b.enemy.resist)}。${b.phase===2&&b.enemy.hint?esc(b.enemy.hint):""}</span>`);state.player.stats.mp=clamp(state.player.stats.mp+8,0,totalStats().mpMax);if(b.enemy.boss)unlockAchievement("observeBoss");
+  }else if(type==="talk"){
+    const score=totalStats().reputation+totalStats().insight+(b.observed?12:0)+(state.world.bossEvidence||state.world.borderEvidence||state.world.bossPeace?18:0);
+    if(b.enemy.negotiable&&score+rand(0,25)>=30+b.enemy.level){b.log.push("你的话击中了对方不肯承认的那处裂隙。兵刃缓缓垂下。");b.enemy.hp=0;unlockAchievement("talkBoss");state.world.mercy=(state.world.mercy||0)+1}else{b.log.push("对方没有放下兵刃，但语气里多了一丝迟疑。");addStatus(b.enemyStatuses,"weak",2,15)}
+  }else if(type==="flee"){
+    if(hasStatus(b.playerStatuses,"root")){b.log.push("定身未解，无法脱离。")}
+    else if(chance(clamp((totalStats().agility-b.enemy.level)/35+.45,.15,.9))){state.flees++;b.log.push("你借势脱离战圈，保住了性命。");b.ended=true;b.victory=false;b.fled=true;state.player.stats.hp=Math.max(1,state.player.stats.hp);render();return}
+    else b.log.push("退路被封，逃跑未成。");
+  }else if(type==="environment"){
+    b.environmentUsed=true;const bonus=state.world.dockEnv?58:35+totalStats().insight;
+    hitEnemy(bonus,"你借地势发动奇袭","stun");b.log.push("环境被改变，敌人的节奏随之打乱。");
+  }else if(type==="item"){openBattleItems();return}
+  if(checkBattleOutcome())return;
+  enemyTurn();tickRound();checkBattleOutcome();render();
+}
+function useSkill(sk){
+  const b=state.battle,type=sk[1],p=sk[3]||1,status=sk[4];
+  if(type==="heal"){healPlayer(totalStats().healing*3*p+18,sk[0]);return}
+  if(type==="regen"){addStatus(b.playerStatuses,"regen",3,Math.round(totalStats().healing*1.2+8));b.log.push(`${sk[0]}带来持续回春。`);return}
+  if(type==="cleanse"){["poison","bleed","weak","cold","burn","root"].forEach(k=>delete b.playerStatuses[k]);b.log.push(`${sk[0]}涤清诸般不利状态。`);return}
+  if(type==="shield"){addStatus(b.playerStatuses,"shield",2,Math.round(totalStats().defense*p+22));b.log.push(`${sk[0]}凝成护盾。`);return}
+  if(type==="hidden"){addStatus(b.playerStatuses,"hidden",2,28);b.log.push(`${sk[0]}令身形没入视线。`);return}
+  const r=calcDamage(p);hitEnemy(r.dmg,sk[0]+(r.crit?"会心":""));
+  if(status){
+    if(status==="berserk")addStatus(b.playerStatuses,"berserk",3,22);else addStatus(b.enemyStatuses,status,status==="stun"?1:2,Math.max(5,Math.round(totalStats().attack*.2)));
+  }
+  if(type==="drain")healPlayer(Math.round(r.dmg*.38),"饮血回流");
+}
+function triggerSchoolMechanic(){
+  const b=state.battle,id=state.player.school;b.gauge=0;
+  const labels={tieyi:"不动势反震",suwen:"芳息回生",suimeng:"三重影痕",shenxiang:"五音归宫",jiuling:"魂契共蚀",xuehe:"战意沸腾",canglan:"潮势圆转",xuanji:"机括合阵",hongyin:"梵响终曲",chaoguang:"明暗交轮",longyin:"剑心归息"};
+  if(id==="tieyi"){addStatus(b.playerStatuses,"shield",3,totalStats().defense*2);hitEnemy(28,labels[id],"armorBreak")}
+  if(id==="suwen"){healPlayer(42,labels[id]);["poison","bleed","weak","cold","burn"].forEach(k=>delete b.playerStatuses[k])}
+  if(id==="suimeng"){addStatus(b.playerStatuses,"hidden",3,45);hitEnemy(Math.round(totalStats().attack*1.25),labels[id],"bleed")}
+  if(id==="shenxiang"){addStatus(b.enemyStatuses,"stun",1,0);addStatus(b.enemyStatuses,"burn",3,10);b.log.push(`${labels[id]}同时锁住敌人气机。`)}
+  if(id==="jiuling"){addStatus(b.enemyStatuses,"poison",4,14);addStatus(b.enemyStatuses,"weak",3,20);b.log.push(`${labels[id]}令影傀复制所有蚀伤。`)}
+  if(id==="xuehe"){addStatus(b.playerStatuses,"berserk",3,25);healPlayer(32,labels[id])}
+  if(id==="canglan"){state.player.stats.mp=clamp(state.player.stats.mp+24,0,totalStats().mpMax);hitEnemy(36,labels[id],"cold")}
+  if(id==="xuanji"){b.environmentUsed=false;hitEnemy(42,labels[id],"burn")}
+  if(id==="hongyin"){addStatus(b.playerStatuses,"shield",3,35);addStatus(b.playerStatuses,"regen",3,12);b.log.push(`${labels[id]}化作护体和鸣。`)}
+  if(id==="chaoguang"){addStatus(b.playerStatuses,"hidden",2,40);addStatus(b.playerStatuses,"shield",2,28);b.log.push(`${labels[id]}使明辉护体、幽影藏锋。`)}
+  if(id==="longyin"){state.player.stats.mp=clamp(state.player.stats.mp+18,0,totalStats().mpMax);healPlayer(28,labels[id]);hitEnemy(30,labels[id],"armorBreak")}
+  if(state.world.schoolEventDone)unlockAchievement(`school_${id}`);
+}
+function enemyTurn(){
+  const b=state.battle;if(!b||b.enemy.hp<=0||b.ended)return;
+  if(hasStatus(b.enemyStatuses,"stun")){b.log.push(`${b.enemy.name}眩晕未醒，行动中断。`);return}
+  const e=b.enemy,s=state.player.stats,t=totalStats();let atk=e.attack*(hasStatus(b.enemyStatuses,"weak") ? .72 : 1)*(hasStatus(b.enemyStatuses,"berserk")?1.28:1);
+  let def=t.defense*(hasStatus(b.playerStatuses,"armorBreak") ? .65 : 1);let dmg=Math.max(2,Math.round(atk-def*.55+rand(-4,5)));
+  if(b.defending)dmg=Math.round(dmg*.55);
+  if(hasStatus(b.playerStatuses,"hidden")&&chance(.45)){b.log.push("你借隐匿避开了这一击。");return}
+  if(hasStatus(b.playerStatuses,"shield")){const sh=b.playerStatuses.shield,take=Math.min(sh.power,dmg);sh.power-=take;dmg-=take;b.log.push(`护盾抵消 ${take} 点伤害。`);if(sh.power<=0)delete b.playerStatuses.shield}
+  const move=e.moves[(b.turn-1)%e.moves.length];s.hp-=dmg;b.log.push(`${e.name}施展${move}，造成 <b>${dmg}</b> 点伤害。`);
+  if(b.turn%3===0){const statuses=["bleed","poison","cold","armorBreak","weak"];const st=statuses[(b.turn+e.level)%statuses.length];addStatus(b.playerStatuses,st,2,Math.max(4,Math.floor(e.attack*.16)));b.log.push(`你陷入${STATUS_NAMES[st]}。`)}
+}
+function tickStatuses(obj,isPlayer){
+  Object.entries(obj).forEach(([k,v])=>{
+    if(["poison","bleed","burn"].includes(k)){const dmg=Math.max(3,v.power||5);if(isPlayer){state.player.stats.hp-=dmg;state.battle.log.push(`${STATUS_NAMES[k]}造成 ${dmg} 点伤害。`)}else{state.battle.enemy.hp-=dmg;state.battle.log.push(`${state.battle.enemy.name}受${STATUS_NAMES[k]} ${dmg} 点伤害。`)}}
+    if(k==="regen"&&isPlayer)healPlayer(v.power||7,"回春");
+    v.turns--;if(v.turns<=0)delete obj[k];
+  })
+}
+function tickRound(){const b=state.battle;tickStatuses(b.playerStatuses,true);tickStatuses(b.enemyStatuses,false);b.turn++;b.gauge=Math.max(0,b.gauge-5)}
+function checkBattleOutcome(){
+  const b=state.battle;if(!b)return true;
+  if(b.enemy.hp<=0){
+    if(b.enemy.phase2&&b.phase===1){
+      b.phase=2;const p=b.enemy.phase2;b.enemy.name=p.name;b.enemy.hp=p.hp;b.enemy.hpMax=p.hp;b.enemy.attack=p.attack;b.enemy.defense=p.defense;b.enemy.moves=p.moves;b.enemy.hint=p.hint;b.enemyStatuses={};b.log.push(`<span class="hint">阶段变化：${esc(p.hint)}</span>`);render();return true;
+    }
+    b.ended=true;b.victory=true;state.battleWins++;state.player.stats.xp+=35+b.enemy.level*12;state.player.stats.cultivation+=20+b.enemy.level*6;
+    state.player.stats.hp=clamp(state.player.stats.hp+18,1,totalStats().hpMax);state.player.stats.mp=clamp(state.player.stats.mp+15,0,totalStats().mpMax);
+    b.log.push(`战斗结束。获得阅历与修为。`);if(state.player.stats.hp===1)unlockAchievement("oneHp");checkLevel();checkAchievements();autoSave();render();return true;
+  }
+  if(state.player.stats.hp<=0){state.player.stats.hp=0;b.ended=true;b.victory=false;state.failures++;b.log.push("气血耗尽。你的视野沉入夜色。");render();return true}
+  return false;
+}
+function battleContinue(){
+  const b=state.battle,context=b.context,next=b.next;state.battle=null;
+  if(context?.type==="dungeon"){completeDungeon(context.id,context.difficulty,context.route,b.turn);return}
+  enterNode(next);
+}
+function openBattleItems(){
+  const usable=Object.entries(state.inventory.items).filter(([id,n])=>n>0&&ITEMS[id]?.use);
+  showModal("战斗道具",usable.length?`<div class="list">${usable.map(([id,n])=>`<div class="list-card"><h3>${esc(ITEMS[id].name)} ×${n}</h3><p>${esc(ITEMS[id].desc)}</p><button class="btn small" data-use-battle="${id}">使用</button></div>`).join("")}</div>`:`<div class="empty">没有可用的药品或暗器。</div>`);
+  document.querySelectorAll("[data-use-battle]").forEach(btn=>btn.onclick=()=>{useItem(btn.dataset.useBattle,true);closeModal();if(!checkBattleOutcome()){enemyTurn();tickRound();checkBattleOutcome()}render()});
+}
+function useItem(id,inBattle=false){
+  const item=ITEMS[id],u=item?.use;if(!item||!u||!hasItem(id))return;
+  addItem(id,-1);const s=state.player.stats,t=totalStats();
+  if(u.hp){s.hp=clamp(s.hp+u.hp,0,t.hpMax);state.heals++;toast(`恢复 ${u.hp} 气血`,"good")}
+  if(u.mp){s.mp=clamp(s.mp+u.mp,0,t.mpMax);toast(`恢复 ${u.mp} 内力`,"good")}
+  if(u.energy)s.energy=clamp(s.energy+u.energy,0,s.energyMax);
+  if(u.cleanse&&state.battle){delete state.battle.playerStatuses[u.cleanse];if(id==="antidote")delete state.battle.playerStatuses.weak}
+  if(u.status&&state.battle)addStatus(state.battle.playerStatuses,u.status,2,30);
+  if(u.damage&&state.battle)hitEnemy(u.damage,item.name);
+  checkAchievements();autoSave();if(!inBattle)openPanel("inventory");
+}
+
+function openDungeon(id){
+  const d=DUNGEONS[id];if(!d)return;
+  const rec=state.dungeons[id]||{clears:0,best:null,intel:0};
+  showModal(d.name,`<p>${esc(d.desc)}</p><div class="meta-line"><span class="tag">${esc(d.rec)}</span><span class="tag">通关 ${rec.clears} 次</span><span class="tag">情报 ${rec.intel}</span></div>
+    <h3 class="section-title">选择难度</h3><div class="card-actions">
+    <button class="btn small" data-diff="normal">普通</button><button class="btn small" data-diff="hard">困难</button><button class="btn small" data-diff="extreme">绝境</button></div>
+    <h3 class="section-title">路线与机制</h3><div class="list">${d.routes.map(r=>`<div class="list-card"><h3>${esc(r.name)}</h3><p>${esc(r.desc)}</p><span class="tag">${esc(r.env)}</span></div>`).join("")}</div>
+    <h3 class="section-title">独立掉落</h3><p>${d.drops.map(x=>`<span class="tag">${esc(x)}</span>`).join(" ")}</p><p class="continue-note">失败会保留 1 点副本情报；路线、隐藏房和词条每次变化。</p>`);
+  document.querySelectorAll("[data-diff]").forEach(b=>b.onclick=()=>chooseDungeonRoute(id,b.dataset.diff));
+}
+function chooseDungeonRoute(id,difficulty){
+  const d=DUNGEONS[id];showModal(`${d.name} · 选路`,`<div class="list">${d.routes.map(r=>`<button class="choice-btn" data-route="${r.id}"><b>${esc(r.name)}</b><small>${esc(r.desc)} · 环境：${esc(r.env)}</small></button>`).join("")}</div>`);
+  document.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>beginDungeon(id,difficulty,b.dataset.route));
+}
+function beginDungeon(id,difficulty,route){
+  const d=DUNGEONS[id];closeModal();state.world.currentDungeon=d.name;
+  const hiddenChance=.08+totalStats().luck/200+(route==="chaos" ? .18 : 0);
+  if(chance(hiddenChance)){state.world.hiddenRooms=(state.world.hiddenRooms||0)+1;addItem("page",1);unlockAchievement("hiddenRoom");toast("你发现隐藏房，得到一页武学残卷。","good")}
+  if(id==="rainTemple"&&route==="question")state.world.bossEvidence=true;
+  if(id==="mirrorLake"&&state.player.school==="canglan")state.world.nextBattleBuff="hidden";
+  startBattle(d.enemy,state.node,{type:"dungeon",id,difficulty,route});
+}
+function completeDungeon(id,difficulty,route,turns){
+  const d=DUNGEONS[id];state.world.currentDungeon=null;
+  const rec=state.dungeons[id]||(state.dungeons[id]={clears:0,best:null,intel:0}),first=rec.clears===0;rec.clears++;rec.intel+=2;rec.routes=Array.from(new Set([...(rec.routes||[]),route]));
+  const grade=turns<=6?"甲":turns<=10?"乙":"丙";if(!rec.best||["甲","乙","丙"].indexOf(grade)<["甲","乙","丙"].indexOf(rec.best))rec.best=grade;
+  const qBase=difficulty==="extreme"?5:difficulty==="hard"?4:2,slot=rand(0,8);addEquipment(`eq_${slot}_${clamp(qBase+rand(-1,1),0,6)}`);
+  addItem(["herb","silk","iron","page"][rand(0,3)],rand(1,3));state.player.stats.wealth+=difficulty==="extreme"?180:difficulty==="hard"?100:55;
+  if(first){addItem("page",2);state.player.stats.wealth+=100;toast("首次通关奖励：武学残页 ×2、财富 100。","good")}
+  const ach={rainTemple:"rainTemple",mirrorLake:"mirrorLake",yanmenFort:"yanmenFort",tianjiVault:"tianjiVault"}[id];unlockAchievement(ach);
+  if(id==="rainTemple"&&route==="question"&&grade==="甲")unlockAchievement("d_secret_rain");
+  if(id==="mirrorLake"&&route==="dive"&&difficulty==="extreme"&&hasItem("lantern"))unlockAchievement("d_secret_lake");
+  if(id==="yanmenFort"&&route==="infiltrate"&&hasItem("oldArrow"))unlockAchievement("d_secret_fort");
+  if(id==="tianjiVault"&&route==="chaos"&&(state.world.hiddenRooms||0)>0)unlockAchievement("d_secret_vault");
+  showModal("副本结算",`<div class="ending-seal">${grade}等</div><h2>${esc(d.name)}</h2><p>路线：${esc(d.routes.find(r=>r.id===route)?.name||route)} · 回合：${turns} · 难度：${difficulty==="normal"?"普通":difficulty==="hard"?"困难":"绝境"}</p><p>本次保留了新的路线情报，并获得随机装备与材料。首次通关奖励已经计入。</p><button class="btn primary" id="dungeonDone">返回江湖</button>`);
+  document.getElementById("dungeonDone").onclick=()=>{closeModal();render()};checkAchievements();autoSave();
+}
+
+function resolveEnding(direction){
+  const p=state.personality,s=state.player.stats,r=state.relations,w=state.world;let id;
+  if(direction==="break"&&state.run>=2&&w.fullTruth&&w.memoryAwake)id="dawn";
+  else if(direction==="power"){if(s.notoriety>12||p.obsession>p.benevolence+4)id="demon";else if(Object.values(r).filter(x=>x.trust<0).length>=4)id="betrayed";else id="court"}
+  else if(direction==="seal"){if(state.fort.level>=3||hasItem("mirrorShard"))id="guardian";else id="buried"}
+  else if(direction==="leave"){if(Object.values(r).some(x=>x.trust>=45)&&state.fort.unlocked)id="hermit";else id="wander"}
+  else if(direction==="trade")id="tycoon";
+  else if(direction==="public"){if(r.xiaoYanzhen.trust>=35&&w.namedFallen)id="general";else if(state.player.realm>=5)id="master";else if(p.scheme>p.benevolence+4&&w.faction==="court")id="court";else id="hero"}
+  else id="hero";
+  const hasQuestionNight=Object.values(state.gear).some(x=>x?.id==="eq_0_6")||state.inventory.equipment.some(x=>x.id==="eq_0_6");
+  if(hasQuestionNight){
+    const will=p.benevolence+p.freedom-p.obsession-s.notoriety;
+    state.world.weaponWill=will;
+    if(direction==="power"&&will<0){unlockAchievement("brokenBlade");id="betrayed"}
+    if(direction==="seal"&&will>=2)unlockAchievement("nightBlade");
+  }
+  endGame(id);
+}
+function endGame(id){
+  const e=ENDINGS[id]||ENDINGS.death;state.currentEnding=id;if(!state.endings.includes(id))state.endings.push(id);if(!meta.endings.includes(id))meta.endings.push(id);meta.runs=Math.max(meta.runs,state.run);meta.memory=Math.max(meta.memory,state.run);saveMeta();
+  if(id==="dawn")unlockAchievement("fateBreaker");if(id==="guardian"&&Object.values(state.gear).some(x=>x&&EQUIPMENT_DB[x.id].quality==="神兵"))unlockAchievement("nightBlade");
+  const trusted=Object.entries(state.relations).sort((a,b)=>b[1].trust-a[1].trust).slice(0,4);
+  document.getElementById("battleArea").classList.add("hidden");document.getElementById("sceneArea").classList.remove("hidden");
+  document.getElementById("sceneArea").innerHTML=`<section class="ending"><div class="ending-seal">结局</div><h1>${esc(e.name)}</h1><h2>${esc(e.title)}</h2><p>${esc(e.desc)}</p>
+    <div class="ending-block"><b>关键人物命运</b>${trusted.map(([nid,rv],i)=>`<p>${esc(NPCS[nid].name)}：${esc(rv.trust>=25?NPCS[nid].fates[0]:NPCS[nid].fates[1])}</p>`).join("")}</div>
+    <div class="ending-block"><b>江湖评价</b><p>${esc(personalityReading())}；侠义 ${state.player.stats.chivalry}，恶名 ${state.player.stats.notoriety}，境界 ${REALMS[state.player.realm]}。</p></div>
+    <div class="ending-block"><b>重要选择回顾</b>${state.history.slice(-5).map(h=>`<p>· ${esc(h.text)}</p>`).join("")}</div>
+    <div class="ending-block"><b>本周目统计</b><p>战斗胜利 ${state.battleWins} · 副本通关 ${Object.values(state.dungeons).reduce((n,x)=>n+x.clears,0)} · 成就 ${state.achievements.length} · 奇遇 ${state.adventures.length}</p><p>未探索提示：${esc(e.hint)}</p></div>
+    <div class="ending-actions"><button class="btn primary" id="ngPlusBtn">开启${state.run>=2?"下一":"二"}周目</button><button class="btn" id="summaryBtn">复制本次冒险摘要</button><button class="btn danger" id="freshBtn">全新开始</button></div></section>`;
+  document.getElementById("ngPlusBtn").onclick=startNewGamePlus;document.getElementById("summaryBtn").onclick=copySummary;document.getElementById("freshBtn").onclick=()=>showCreator(true);
+  autoSave();
+}
+function startNewGamePlus(){
+  const old=state, inherited=old.player.school, run=old.run+1;state=freshState({run,ngMemory:(old.ngMemory||0)+1,inheritTalent:inherited});
+  state.player={...old.player,level:1,realm:0,stats:{...state.player.stats,wealth:160,luck:state.player.stats.luck+2}};
+  state.settings=old.settings;state.achievements=[...new Set(meta.achievements)];state.endings=[...new Set(meta.endings)];
+  addItem("page",2);if(meta.endings.length>=3)addEquipment("eq_8_4");
+  applyOriginAndSchool();state.world.ngPlus=true;state.world.memoryFragments=1;state.history=[];enterNode("p0");toast("旧梦重来：部分记忆、收藏与天赋已继承。","good");
+}
+
+function openPanel(name){
+  if(!state&&name!=="archive"){openArchive();return}
+  const panels={character:renderCharacter,inventory:renderInventory,equipment:renderEquipment,skills:renderSkills,quests:renderQuests,relations:renderRelations,fort:renderFort,achievements:renderAchievements,settings:renderSettings,archive:openArchive};
+  if(panels[name])panels[name]();
+}
+function showModal(title,html){document.getElementById("modalTitle").textContent=title;document.getElementById("modalBody").innerHTML=html;document.getElementById("modalWrap").classList.remove("hidden")}
+function closeModal(){document.getElementById("modalWrap").classList.add("hidden");if(state?.world.pendingNode){const n=state.world.pendingNode;delete state.world.pendingNode;enterNode(n)}}
+function renderCharacter(){
+  const t=totalStats(),s=state.player.stats,need=realmNeed();
+  showModal("角色",`<div class="list-card"><h3>${esc(state.player.name)} · ${esc(state.player.title)}</h3><p>${esc(state.player.gender)} · ${esc(state.player.look)}<br>${esc(ORIGINS[state.player.origin].name)} · ${esc(SCHOOLS[state.player.school].name)}</p><span class="tag">${esc(personalityReading())}</span></div>
+  <h3 class="section-title">属性</h3><div class="panel-grid">${["hpMax","mpMax","attack","defense","agility","crit","hit","break","healing","luck","insight","reputation","chivalry","notoriety","wealth","energy"].map(k=>`<div class="stat-card"><span>${statName(k)}</span><b>${Math.round(k==="energy"?s.energy:t[k]||s[k]||0)}</b></div>`).join("")}</div>
+  <h3 class="section-title">境界 · ${REALMS[state.player.realm]}</h3><p>下一境界需要：等级 ${need.level}、修为 ${need.cultivation}、残页 ${need.pages}、悟性 ${need.insight}。</p><div class="progress-line"><i style="width:${clamp(s.cultivation/need.cultivation*100,0,100)}%"></i></div>
+  <button class="btn primary" id="breakRealm" ${state.player.realm>=6?"disabled":""}>进入心境试炼</button>`);
+  document.getElementById("breakRealm").onclick=openBreakthrough;
+}
+function realmNeed(){const r=state.player.realm+1;return{level:Math.min(28,r*4),cultivation:r*180,pages:r+1,insight:7+r*2}}
+function openBreakthrough(){
+  if(state.player.realm>=6){toast("已至天人合一。");return}
+  const n=realmNeed(),s=totalStats(),missing=[];if(state.player.level<n.level)missing.push(`等级 ${n.level}`);if(state.player.stats.cultivation<n.cultivation)missing.push(`修为 ${n.cultivation}`);if(getItemCount("page")<n.pages)missing.push(`残页 ${n.pages}`);if(s.insight<n.insight)missing.push(`悟性 ${n.insight}`);
+  if(missing.length){toast(`尚缺：${missing.join("、")}`,"bad");return}
+  showModal("心境试炼",`<p>雨声忽远。你看见一路上所有未能两全的选择。门槛不问你赢过多少人，只问你愿意承认什么。</p><div class="list">
+  <button class="choice-btn" data-break="accept">承认有些人救不回来，但仍愿再伸手</button>
+  <button class="choice-btn" data-break="control">把遗憾锻成规矩，不再允许意外发生</button>
+  <button class="choice-btn" data-break="release">放下对答案的占有，让路继续向前</button>
+  <button class="choice-btn" data-break="obsess">记住每一笔债，直到无人能逃过清算</button></div>`);
+  document.querySelectorAll("[data-break]").forEach(b=>b.onclick=()=>doBreakthrough(b.dataset.break,n));
+}
+function doBreakthrough(choice,n){
+  const map={accept:"benevolence",control:"scheme",release:"freedom",obsess:"obsession"},key=map[choice],p=state.personality;
+  state.player.stats.cultivation-=n.cultivation;addItem("page",-n.pages);p[key]+=3;
+  const score=totalStats().insight+state.player.stats.luck+Math.max(0,p[key])+rand(0,18);let result;
+  if(score>=n.insight+26){result="perfect";state.player.realm++;state.player.stats.attack+=4;state.player.stats.defense+=3;state.player.stats.hpMax+=18;addItem("hiddenManual",1);unlockAchievement("perfectRealm")}
+  else if(score>=n.insight+10){result="normal";state.player.realm++;state.player.stats.attack+=3;state.player.stats.defense+=2;state.player.stats.hpMax+=12}
+  else if(choice==="obsess"&&chance(.5)){result="demon";state.player.realm++;state.player.permanentWound++;state.player.stats.hpMax-=10;state.player.stats.attack+=6;state.player.stats.notoriety+=3;unlockAchievement("demonRealm")}
+  else{result="fail";state.player.stats.hp=Math.max(1,state.player.stats.hp-35);state.player.stats.cultivation+=Math.floor(n.cultivation*.45)}
+  if(result!=="fail")unlockAchievement("realmUp");
+  const text={perfect:"心湖澄明，你不仅越过门槛，还领悟了隐藏心法《息兵问心篇》。",normal:"气机贯通，你稳稳踏入新的境界。",demon:"心火吞没一瞬清明。你强行破境，却留下永久暗伤。",fail:"最后一步气息散乱。你保住性命，也保留了部分修为与教训。"}[result];
+  closeModal();toast(text,result==="fail"||result==="demon"?"bad":"good");state.player.stats.hp=Math.min(totalStats().hpMax,Math.max(1,state.player.stats.hp+30));autoSave();render();
+}
+function renderInventory(tab="全部"){
+  const tabs=["全部","装备","药品","材料","任务道具","秘籍","奇物"];
+  const eqs=tab==="全部"||tab==="装备"?state.inventory.equipment:[];
+  const items=Object.entries(state.inventory.items).filter(([id,n])=>n>0&&(tab==="全部"||ITEMS[id]?.type===tab));
+  showModal("背包",`<div class="tabs">${tabs.map(x=>`<button class="tab ${x===tab?"active":""}" data-invtab="${x}">${x}</button>`).join("")}</div><div class="capacity">行囊 ${itemSlotsUsed()} / ${state.inventory.capacity} · 福地仓库 ${state.inventory.warehouse.length}</div><div class="list">
+  ${eqs.map(eq=>equipmentCard(eq,true)).join("")}${items.map(([id,n])=>itemCard(id,n)).join("")}${!eqs.length&&!items.length?`<div class="empty">这一页行囊是空的。</div>`:""}</div>`);
+  bindInventoryActions();document.querySelectorAll("[data-invtab]").forEach(b=>b.onclick=()=>renderInventory(b.dataset.invtab));
+}
+function equipmentScore(eq){const b=EQUIPMENT_DB[eq.id];return Object.values(b.base).reduce((a,n)=>a+n*8,0)+Object.values(eq.affixes||{}).reduce((a,n)=>a+n*6,0)+eq.enhance*14+QUALITIES.indexOf(b.quality)*35}
+function equipmentCard(eq,inBag){
+  const b=EQUIPMENT_DB[eq.id],equipped=Object.values(state.gear).some(x=>x?.uid===eq.uid);
+  return `<div class="list-card"><span class="locked-mark">${eq.locked?"锁":""}</span><h3 class="quality-${b.quality}">${esc(b.name)} ${eq.enhance?`+${eq.enhance}`:""}</h3>
+  <div class="meta-line"><span class="tag">${b.quality}</span><span class="tag">${b.slot}</span><span class="tag">评分 ${equipmentScore(eq)}</span><span class="tag">耐久 ${eq.durability}</span></div>
+  <p>${Object.entries(b.base).map(([k,v])=>`${statName(k)} +${v+eq.enhance}`).join(" · ")}<br>${Object.entries(eq.affixes||{}).map(([k,v])=>`词条：${statName(k)} +${v}`).join(" · ")}${b.set?`<br>套装：${SETS[b.set].name}`:""}<br>${esc(b.desc)} · 来源：${esc(b.source)}</p>
+  <div class="card-actions">${inBag&&!equipped?`<button class="btn small" data-equip="${eq.uid}">穿戴</button>`:""}${equipped?`<button class="btn small" data-unequip="${b.slot}">卸下</button>`:""}<button class="btn small" data-compare="${eq.uid}">对比</button><button class="btn small" data-enhance="${eq.uid}">强化</button><button class="btn small" data-lock="${eq.uid}">${eq.locked?"解锁":"锁定"}</button>${inBag&&!equipped?`<button class="btn small" data-store="${eq.uid}" ${state.fort.unlocked?"":"disabled"}>存入福地</button><button class="btn small" data-sell="${eq.uid}" ${eq.locked?"disabled":""}>出售</button><button class="btn small danger" data-salvage="${eq.uid}" ${eq.locked?"disabled":""}>分解</button>`:""}</div></div>`;
+}
+function itemCard(id,n){const it=ITEMS[id];return `<div class="list-card"><h3>${esc(it.name)} ×${n}</h3><div class="meta-line"><span class="tag">${it.type}</span>${it.value?`<span class="tag">价值 ${it.value}</span>`:""}</div><p>${esc(it.desc)}</p><div class="card-actions">${it.use?`<button class="btn small" data-use="${id}">使用</button>`:""}${it.value?`<button class="btn small" data-sellitem="${id}">出售一个</button>`:""}</div></div>`}
+function findEq(uid){return state.inventory.equipment.find(x=>x.uid===uid)||Object.values(state.gear).find(x=>x?.uid===uid)}
+function bindInventoryActions(){
+  document.querySelectorAll("[data-use]").forEach(b=>b.onclick=()=>useItem(b.dataset.use));
+  document.querySelectorAll("[data-equip]").forEach(b=>b.onclick=()=>equipItem(b.dataset.equip));
+  document.querySelectorAll("[data-unequip]").forEach(b=>b.onclick=()=>unequipItem(b.dataset.unequip));
+  document.querySelectorAll("[data-enhance]").forEach(b=>b.onclick=()=>enhanceEq(b.dataset.enhance));
+  document.querySelectorAll("[data-lock]").forEach(b=>b.onclick=()=>{const eq=findEq(b.dataset.lock);eq.locked=!eq.locked;renderInventory("装备");autoSave()});
+  document.querySelectorAll("[data-sell]").forEach(b=>b.onclick=()=>sellEq(b.dataset.sell));
+  document.querySelectorAll("[data-salvage]").forEach(b=>b.onclick=()=>salvageEq(b.dataset.salvage));
+  document.querySelectorAll("[data-sellitem]").forEach(b=>b.onclick=()=>{const id=b.dataset.sellitem;addItem(id,-1);state.player.stats.wealth+=Math.floor(ITEMS[id].value*.55);renderInventory();autoSave()});
+  document.querySelectorAll("[data-compare]").forEach(b=>b.onclick=()=>compareEq(b.dataset.compare));
+  document.querySelectorAll("[data-store]").forEach(b=>b.onclick=()=>storeEq(b.dataset.store));
+}
+function equipItem(uid){
+  const idx=state.inventory.equipment.findIndex(x=>x.uid===uid);if(idx<0)return;const eq=state.inventory.equipment[idx],base=EQUIPMENT_DB[eq.id];
+  if(state.player.level<base.levelReq||state.player.realm<base.realmReq){toast(`需要 Lv.${base.levelReq} · ${REALMS[base.realmReq]}`,"bad");return}
+  const old=state.gear[base.slot];if(old)state.inventory.equipment.push(old);state.gear[base.slot]=eq;state.inventory.equipment.splice(idx,1);
+  if(eq.id==="eq_0_6"){state.world.weaponAwake=true;toast("“问夜”在你掌中轻震，像是在记住你。","good")}else toast(`已穿戴 ${base.name}`,"good");
+  checkAchievements();autoSave();renderInventory("装备")
+}
+function unequipItem(slot){if(itemSlotsUsed()>=state.inventory.capacity){toast("行囊已满。","bad");return}const eq=state.gear[slot];if(!eq)return;state.inventory.equipment.push(eq);state.gear[slot]=null;autoSave();renderEquipment()}
+function enhanceEq(uid){const eq=findEq(uid);if(!eq)return;if(getItemCount("iron")<2||state.player.stats.wealth<35){toast("强化需要乌铁 ×2 与 35 财富。","bad");return}if(eq.enhance>=10){toast("已强化至当前上限。");return}addItem("iron",-2);state.player.stats.wealth-=35;eq.enhance++;eq.durability=Math.max(20,eq.durability-rand(1,4));toast(`强化成功 +${eq.enhance}`,"good");autoSave();renderInventory("装备")}
+function sellEq(uid){const i=state.inventory.equipment.findIndex(x=>x.uid===uid);if(i<0)return;const eq=state.inventory.equipment[i],b=EQUIPMENT_DB[eq.id];if(eq.locked)return;state.player.stats.wealth+=30+QUALITIES.indexOf(b.quality)*25+eq.enhance*15;state.inventory.equipment.splice(i,1);renderInventory("装备");autoSave()}
+function salvageEq(uid){const i=state.inventory.equipment.findIndex(x=>x.uid===uid);if(i<0)return;const eq=state.inventory.equipment[i],b=EQUIPMENT_DB[eq.id];if(eq.locked)return;addItem("iron",1+QUALITIES.indexOf(b.quality));state.inventory.equipment.splice(i,1);renderInventory("装备");autoSave()}
+function storeEq(uid){const i=state.inventory.equipment.findIndex(x=>x.uid===uid);if(i<0||!state.fort.unlocked)return;state.inventory.warehouse.push(state.inventory.equipment[i]);state.inventory.equipment.splice(i,1);toast("装备已存入福地仓库。","good");autoSave();renderInventory("装备")}
+function withdrawEq(uid){if(itemSlotsUsed()>=state.inventory.capacity){toast("行囊已满。","bad");return}const i=state.inventory.warehouse.findIndex(x=>x.uid===uid);if(i<0)return;state.inventory.equipment.push(state.inventory.warehouse[i]);state.inventory.warehouse.splice(i,1);autoSave();renderFort()}
+function compareEq(uid){const eq=findEq(uid),b=EQUIPMENT_DB[eq.id],old=state.gear[b.slot];showModal("装备对比",`<div class="panel-grid"><div>${equipmentCard(eq,false)}</div><div>${old?equipmentCard(old,false):`<div class="empty">该部位尚未穿戴</div>`}</div></div><p>评分差：${equipmentScore(eq)-(old?equipmentScore(old):0)>=0?"+":""}${equipmentScore(eq)-(old?equipmentScore(old):0)}</p>`);bindInventoryActions()}
+function renderEquipment(){
+  const sets=setCounts();showModal("装备",`<div class="list">${SLOTS.map(slot=>state.gear[slot]?equipmentCard(state.gear[slot],false):`<div class="list-card"><h3>${slot}</h3><p>尚未穿戴</p></div>`).join("")}</div>
+  <h3 class="section-title">套装效果</h3><div class="list">${Object.entries(SETS).map(([id,set])=>`<div class="list-card"><h3>${set.name} · ${sets[id]||0}/6</h3><p>2件：${set.two}<br>4件：${set.four}<br>6件：${set.six}</p></div>`).join("")}</div>`);bindInventoryActions()
+}
+function renderSkills(){
+  const sc=SCHOOLS[state.player.school];showModal("武学",`<div class="list-card"><h3>${sc.name} · ${sc.role}</h3><p>${sc.mechanic}</p><span class="tag">成长：${sc.growth}</span></div><h3 class="section-title">主动招式</h3><div class="list">${sc.skills.map(sk=>`<div class="list-card"><h3>${sk[0]}</h3><p>${skillDesc(sk)} · 消耗 ${sk[2]} 内力 · 威力系数 ${sk[3]}</p></div>`).join("")}</div>
+  <h3 class="section-title">被动天赋</h3><div class="list">${sc.passives.map(x=>`<div class="list-card"><p>${esc(x)}</p></div>`).join("")}</div><h3 class="section-title">专属江湖事件</h3><p>${esc(sc.event)}</p><span class="tag">限定成就：${esc(sc.achievement)}</span><br><button class="btn primary" id="schoolEvent" style="margin-top:12px" ${state.player.level<4||state.world.schoolEventDone?"disabled":""}>${state.world.schoolEventDone?"心契已定":"赴流派心契"}</button>`);
+  document.getElementById("schoolEvent").onclick=openSchoolEvent;
+}
+function openSchoolEvent(){
+  if(state.player.level<4||state.world.schoolEventDone)return;
+  const sc=SCHOOLS[state.player.school];showModal(`${sc.name} · 心契`,`<p>${esc(sc.event)}</p><p>这不只是一场技艺考验。你需要决定这门武学最终要保护什么。</p><div class="list">
+  <button class="choice-btn" data-school-choice="guard">以此武学护住眼前之人</button>
+  <button class="choice-btn" data-school-choice="truth">以此武学追问被藏起的真相</button>
+  <button class="choice-btn" data-school-choice="self">以此武学保全自己的自由</button></div>`);
+  document.querySelectorAll("[data-school-choice]").forEach(b=>b.onclick=()=>{
+    const kind=b.dataset.schoolChoice;state.world.schoolEventDone=true;state.personality[kind==="guard"?"benevolence":kind==="truth"?"obsession":"freedom"]+=2;
+    state.player.stats.cultivation+=80;state.player.stats.insight+=1;addHistory(`完成${sc.name}专属心契，选择${b.textContent.trim()}。`);
+    closeModal();toast(`专属成长「${sc.growth}」已开启；在战斗中蓄满核心机制可解锁限定成就。`,"good");autoSave();render()
+  });
+}
+function renderQuests(tab="主线任务"){
+  const categories=["主线任务","支线任务","奇遇任务","门派任务","身份任务","福地任务","伙伴任务","悬赏任务","江湖传闻"];
+  const main=Object.values(state.quests).map(q=>`<div class="list-card"><h3>${esc(q.name)}</h3><p>${esc(q.stage)}</p><span class="tag">${q.status}</span></div>`).join("");
+  const dList=Object.entries(DUNGEONS).map(([id,d])=>`<div class="list-card"><h3>${d.name}</h3><p>${d.desc}</p><button class="btn small" data-dungeon="${id}">进入副本</button></div>`).join("");
+  const adv=ADVENTURES.map(a=>`<div class="list-card"><h3>${state.adventures.includes(a.id)?a.name:"未解奇遇"}</h3><p>${state.adventures.includes(a.id)?a.desc:`线索：${a.place} · ${a.time} · ${a.condition}`}</p></div>`).join("");
+  showModal("任务与传闻",`<div class="tabs">${categories.map(x=>`<button class="tab ${x===tab?"active":""}" data-qtab="${x}">${x}</button>`).join("")}</div><div class="list">${tab==="主线任务"?main:tab==="悬赏任务"?dList:tab==="奇遇任务"?adv:`<div class="empty">新的${tab.replace("任务","")}故事会随选择、关系与天气出现。</div>`}</div>`);
+  document.querySelectorAll("[data-qtab]").forEach(b=>b.onclick=()=>renderQuests(b.dataset.qtab));document.querySelectorAll("[data-dungeon]").forEach(b=>b.onclick=()=>openDungeon(b.dataset.dungeon));
+}
+function renderRelations(){
+  showModal("江湖关系",`<p class="continue-note">好感与信任分别计算。一个人可以喜欢你，却仍不肯把秘密交给你。</p><div class="list">${Object.entries(NPCS).map(([id,n])=>{const r=state.relations[id];return`<div class="list-card"><h3>${esc(n.name)} · ${esc(n.identity)}</h3><div class="meta-line"><span class="tag">${relationLabel(r)}</span><span class="tag">好感 ${r.favor}</span><span class="tag">信任 ${r.trust}</span><span class="tag">${r.stance}</span></div><p>${esc(n.personality)}<br>所求：${esc(n.goal)}<br>专属任务：${esc(n.quest)}</p>${r.trust>=55?`<p>已知秘密：${esc(n.secret)}</p>`:`<p>秘密：尚未获得足够信任</p>`}</div>`}).join("")}</div>`)
+}
+function renderFort(){
+  if(!state.fort.unlocked){showModal("福地",`<div class="empty">尚未拥有福地。完成汴京迷局后可解锁。</div>`);return}
+  const f=state.fort,actions=[["rest","歇息","恢复气血、内力与精力"],["garden","药圃","消耗精力采收青梗草"],["alchemy","炼药","将药草炼成止血散"],["forge","锻造","以材料强化装备"],["cook","烹饪","煮一餐恢复精力"],["train","演武","消耗精力获得修为"],["mail","来信","接收一封江湖来信"],["dispatch","派遣","伙伴执行任务带回资源"],["guest","邀客","邀请一位相识之人做客"]];
+  showModal(`栖霞福地 · ${f.level}级`,`<div class="list-card"><h3>已建区域</h3><p>${f.rooms.join(" · ")||"荒院"}<br>药圃存量 ${f.herbs} · 访客 ${f.visitors.length} · 派遣 ${f.dispatches}</p></div><div class="panel-grid">${actions.map(a=>`<button class="choice-card" data-fort="${a[0]}"><b>${a[1]}</b><span>${a[2]}</span></button>`).join("")}</div><button class="btn primary" id="upgradeFort" style="margin-top:12px">升级福地（${100+f.level*70} 财富、沉香木 ×2）</button>
+  <h3 class="section-title">福地仓库</h3><div class="list">${state.inventory.warehouse.length?state.inventory.warehouse.map(eq=>`<div class="list-card"><h3>${esc(EQUIPMENT_DB[eq.id].name)}</h3><button class="btn small" data-withdraw="${eq.uid}">取出</button></div>`).join(""):`<div class="empty">仓库尚空。</div>`}</div>
+  <h3 class="section-title">收藏与秘密</h3><p>${hasItem("mirrorShard")?"地下室里，照夜残光正在回应访客。":"地下室尚未出现异常。"}${hasItem("beastEgg")?" 檐下的灵兽卵需要持续照料。":""}</p>`);
+  document.querySelectorAll("[data-fort]").forEach(b=>b.onclick=()=>fortAction(b.dataset.fort));document.querySelectorAll("[data-withdraw]").forEach(b=>b.onclick=()=>withdrawEq(b.dataset.withdraw));document.getElementById("upgradeFort").onclick=upgradeFort;
+}
+function fortAction(type){
+  const f=state.fort,s=state.player.stats,t=totalStats();if(type!=="rest"&&type!=="cook"&&s.energy<12){toast("精力不足，先歇息。","bad");return}
+  if(type==="rest"){s.hp=t.hpMax;s.mp=t.mpMax;s.energy=s.energyMax;toast("一夜好眠，状态尽复。","good")}
+  if(type==="garden"){s.energy-=12;const n=1+Math.floor(f.level/3);addItem("herb",n);f.herbs+=n;toast(`采得青梗草 ×${n}`,"good")}
+  if(type==="alchemy"){if(getItemCount("herb")<2){toast("需要青梗草 ×2。","bad");return}addItem("herb",-2);addItem(chance(.2+totalStats().healing/100)?"bigPill":"smallPill",1);s.energy-=10}
+  if(type==="forge"){if(getItemCount("iron")<2){toast("需要乌铁碎片 ×2。","bad");return}const eq=Object.values(state.gear).find(Boolean);if(!eq){toast("先穿戴一件装备。","bad");return}addItem("iron",-2);eq.enhance++;s.energy-=15;toast(`${EQUIPMENT_DB[eq.id].name} 强化至 +${eq.enhance}`,"good")}
+  if(type==="cook"){s.energy=clamp(s.energy+35,0,s.energyMax);toast("灶上热气氤氲，精力恢复。","good")}
+  if(type==="train"){s.energy-=20;s.cultivation+=35+f.level*5;toast("演武结束，修为有所精进。","good")}
+  if(type==="mail"){s.energy-=8;const a=ADVENTURES.find(x=>!state.adventures.includes(x.id));if(a){state.adventures.push(a.id);addHistory(`奇遇「${a.name}」：${a.desc}`);toast(`触发奇遇 · ${a.name}`,"good")}else toast("今日只有一封故友问安。")}
+  if(type==="dispatch"){const ally=Object.entries(state.relations).filter(([,r])=>r.trust>=15).sort((a,b)=>b[1].trust-a[1].trust)[0];if(!ally){toast("还没有足够信任你的伙伴。","bad");return}s.energy-=10;f.dispatches++;addItem(chance(.5)?"iron":"herb",2);state.relations[ally[0]].favor+=1;toast(`${NPCS[ally[0]].name} 带回了资源。`,"good")}
+  if(type==="guest"){openGuestPicker();return}
+  if(hasItem("beastEgg")){f.beastCare++;if(f.beastCare>=5&&!state.world.beastBorn){state.world.beastBorn=true;state.adventures.push("adv_beast");toast("灵兽“墨团”破壳而出，成为福地伙伴！","good")}}
+  checkAchievements();autoSave();renderFort()
+}
+function openGuestPicker(){
+  const known=Object.entries(state.relations).filter(([,r])=>r.status==="已相识");
+  if(!known.length){toast("尚无可以邀请的相识之人。","bad");return}
+  showModal("邀请做客",`<div class="list">${known.map(([id,r])=>`<button class="choice-btn" data-guest="${id}">${esc(NPCS[id].name)}<small>${relationLabel(r)} · ${NPCS[id].stance}</small></button>`).join("")}</div>`);
+  document.querySelectorAll("[data-guest]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.guest,r=state.relations[id];state.fort.visitors=Array.from(new Set([...state.fort.visitors,id]));r.favor+=2;
+    if((r.stance==="朝堂"||r.stance==="照骨楼")&&hasItem("mirrorShard")&&r.trust<15){state.world.fortLeak=true;r.trust-=2;toast(`${NPCS[id].name}似乎留意到了地下室的异光。情报可能已经外泄。`,"bad")}
+    else{r.trust+=1;toast(`${NPCS[id].name}在院中留到灯尽。`,"good")}
+    closeModal();autoSave();render()
+  });
+}
+function upgradeFort(){
+  const f=state.fort,cost=100+f.level*70;if(f.level>=7){toast("福地已升至最高等级。");return}if(state.player.stats.wealth<cost||getItemCount("timber")<2){toast(`需要 ${cost} 财富与沉香木 ×2。`,"bad");return}
+  state.player.stats.wealth-=cost;addItem("timber",-2);f.level++;const rooms=["药圃","锻造台","藏书阁","演武场","客舍","灵兽园","地下密室"];f.rooms=rooms.slice(0,f.level);if(f.level===3)state.inventory.capacity+=8;if(f.level===5)state.inventory.capacity+=8;checkAchievements();autoSave();renderFort()
+}
+function renderAchievements(tab="全部"){
+  const cats=["全部","剧情","战斗","探索","收集","关系","隐藏","特殊失败"];
+  const list=ACHIEVEMENTS.filter(a=>tab==="全部"||a.category===tab);
+  showModal(`成就 · ${state.achievements.length}/${ACHIEVEMENTS.length}`,`<div class="tabs">${cats.map(x=>`<button class="tab ${x===tab?"active":""}" data-atab="${x}">${x}</button>`).join("")}</div><div class="list">${list.map(a=>{const got=state.achievements.includes(a.id)||meta.achievements.includes(a.id);return`<div class="list-card"><h3>${got?"◆":"◇"} ${esc(a.hidden&&!got?"未解之印":a.name)}</h3><p>${esc(a.hidden&&!got?"条件隐于前尘，或许另一个周目会留下线索。":a.desc)}</p><span class="tag">${a.category}</span></div>`}).join("")}</div>`);
+  document.querySelectorAll("[data-atab]").forEach(b=>b.onclick=()=>renderAchievements(b.dataset.atab))
+}
+function renderSettings(){
+  showModal("设置与存档",`<div class="list">
+  <div class="list-card"><h3>阅读设置</h3><label class="field">字号 <input id="fontRange" type="range" min="14" max="21" value="${state.settings.font}"></label><label><input id="motionToggle" type="checkbox" ${state.settings.reduceMotion?"checked":""}> 减少动态效果</label><br><label><input id="soundToggle" type="checkbox" ${state.settings.sound?"checked":""}> 开启轻提示音</label><br><label><input id="randomToggle" type="checkbox" ${state.settings.randomEncounters?"checked":""}> 开启随机战斗</label></div>
+  <div class="list-card"><h3>存档</h3><div class="card-actions"><button class="btn small" data-save-slot="1">保存一</button><button class="btn small" data-load-slot="1">读取一</button><button class="btn small" data-save-slot="2">保存二</button><button class="btn small" data-load-slot="2">读取二</button><button class="btn small" data-save-slot="3">保存三</button><button class="btn small" data-load-slot="3">读取三</button></div><p>自动存档会在每次重要选择、战斗与物品变化后更新。</p></div>
+  <div class="list-card"><h3>分享与迁移</h3><div class="card-actions"><button class="btn small" id="exportSave">导出存档文本</button><button class="btn small" id="importSave">导入存档文本</button><button class="btn small" id="copySummary">复制当前冒险摘要</button></div></div>
+  <div class="list-card"><button class="btn danger" id="restartGame">重新开始本周目</button></div></div>`);
+  document.getElementById("fontRange").oninput=e=>{state.settings.font=Number(e.target.value);applySettings();autoSave()};
+  document.getElementById("motionToggle").onchange=e=>{state.settings.reduceMotion=e.target.checked;applySettings();autoSave()};
+  document.getElementById("soundToggle").onchange=e=>{state.settings.sound=e.target.checked;autoSave()};
+  document.getElementById("randomToggle").onchange=e=>{state.settings.randomEncounters=e.target.checked;autoSave()};
+  document.querySelectorAll("[data-save-slot]").forEach(b=>b.onclick=()=>manualSave(b.dataset.saveSlot));
+  document.querySelectorAll("[data-load-slot]").forEach(b=>b.onclick=()=>manualLoad(b.dataset.loadSlot));
+  document.getElementById("exportSave").onclick=exportSave;document.getElementById("importSave").onclick=importSave;document.getElementById("copySummary").onclick=copySummary;
+  document.getElementById("restartGame").onclick=()=>{if(confirm("确定放弃当前周目并重新创建角色？已解锁成就与结局会保留。"))showCreator(true)};
+}
+function openArchive(){
+  const ends=Object.entries(ENDINGS);showModal("江湖图鉴",`<p>已解锁结局 ${meta.endings.length}/${ends.length} · 成就 ${meta.achievements.length}/${ACHIEVEMENTS.length} · 完成周目 ${meta.runs}</p><h3 class="section-title">结局图鉴</h3><div class="list">${ends.map(([id,e])=>{const got=meta.endings.includes(id);return`<div class="list-card"><h3>${got?esc(e.name):"未题名的结局"}</h3><p>${got?esc(e.desc):esc(e.hint)}</p></div>`}).join("")}</div>`)
+}
+function applySettings(){
+  const st=state?.settings||{font:16,reduceMotion:false};document.documentElement.style.setProperty("--fs",`${st.font}px`);document.body.classList.toggle("reduce-motion",!!st.reduceMotion)
+}
+function clickSound(){
+  if(!state?.settings.sound)return;try{const A=window.AudioContext||window.webkitAudioContext,ctx=new A(),o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=460;g.gain.value=.025;o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.035)}catch(e){}
+}
+function toast(msg,type=""){
+  const el=document.createElement("div");el.className=`toast ${type}`;el.textContent=msg;document.getElementById("toasts").appendChild(el);setTimeout(()=>el.remove(),2600)
+}
+function autoSave(){if(!state)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));document.getElementById("continueBtn")?.classList.remove("hidden")}catch(e){toast("本地存档空间不足，请导出存档。","bad")}}
+function reviveState(data){
+  if(!data||data.version!==VERSION||!data.player||!data.inventory||!data.world)throw new Error("存档格式不兼容");
+  data=deepClone(data);
+  const fresh=freshState();state=Object.assign(fresh,data);state.player=Object.assign(fresh.player,data.player);state.player.stats=Object.assign(fresh.player.stats,data.player.stats||{});state.settings=Object.assign(fresh.settings,data.settings||{});
+  state.relations=Object.assign(defaultRelations(),data.relations||{});state.gear=Object.assign(blankGear(),data.gear||{});state.fort=Object.assign(fresh.fort,data.fort||{});state.world.entered=state.world.entered||{};return state;
+}
+function loadAuto(){try{reviveState(JSON.parse(localStorage.getItem(SAVE_KEY)));showGame();toast("已读取自动存档。","good")}catch(e){toast("没有可读取的自动存档。","bad")}}
+function manualSave(slot){try{localStorage.setItem(SLOT_PREFIX+slot,JSON.stringify(state));toast(`已写入手动存档 ${slot}`,"good")}catch(e){toast("保存失败。","bad")}}
+function manualLoad(slot){try{reviveState(JSON.parse(localStorage.getItem(SLOT_PREFIX+slot)));closeModal();showGame();toast(`已读取手动存档 ${slot}`,"good")}catch(e){toast("该栏为空或存档损坏。","bad")}}
+function encodeSave(data){return btoa(unescape(encodeURIComponent(JSON.stringify(data))))}
+function decodeSave(text){return JSON.parse(decodeURIComponent(escape(atob(text.trim()))))}
+function exportSave(){const text=encodeSave({kind:"汴河夜雨存档",version:VERSION,state,meta});showModal("导出存档",`<p>复制下方文本，通过微信发送给朋友。对方导入后即可继续。</p><textarea class="save-text" id="saveText">${text}</textarea><button class="btn primary" id="copySave">复制存档文本</button>`);document.getElementById("copySave").onclick=()=>copyText(text,"存档文本已复制")}
+function importSave(){showModal("导入存档",`<p>粘贴完整存档文本。导入会覆盖当前自动存档，但不会删除手动存档。</p><textarea class="save-text" id="importText" placeholder="在此粘贴……"></textarea><button class="btn primary" id="doImport">校验并导入</button>`);document.getElementById("doImport").onclick=()=>{try{const p=decodeSave(document.getElementById("importText").value);if(p.kind!=="汴河夜雨存档"||p.version!==VERSION)throw 0;reviveState(p.state);meta=Object.assign(meta,p.meta||{});saveMeta();autoSave();closeModal();showGame();toast("存档导入成功。","good")}catch(e){toast("存档文本无效或版本不兼容。","bad")}}}
+function copySummary(){
+  if(!state)return;const text=`【汴河夜雨·江湖战报】\n${state.player.name}「${state.player.title}」｜${ORIGINS[state.player.origin].name}·${SCHOOLS[state.player.school].name}\nLv.${state.player.level}｜${REALMS[state.player.realm]}｜${STORY[state.node]?.chapter||"终局"}\n侠义 ${state.player.stats.chivalry}｜恶名 ${state.player.stats.notoriety}｜财富 ${state.player.stats.wealth}\n战斗胜利 ${state.battleWins}｜副本 ${Object.values(state.dungeons).reduce((n,x)=>n+x.clears,0)}｜成就 ${state.achievements.length}\n近日履历：${state.history.slice(-3).map(x=>x.text).join("；")}\n非官方同人作品《汴河夜雨》`;
+  copyText(text,"冒险摘要已复制，可粘贴到微信聊天。");
+}
+function copyText(text,msg){if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(()=>toast(msg,"good")).catch(()=>fallbackCopy(text,msg));else fallbackCopy(text,msg)}
+function fallbackCopy(text,msg){const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove();toast(msg,"good")}
+
+function showCreator(reset=false){
+  if(reset){state=null;creatorData={step:1,origin:null,school:null}}
+  document.getElementById("landing").classList.add("hidden");document.getElementById("game").classList.add("hidden");document.getElementById("creator").classList.remove("hidden");renderCreator()
+}
+function renderCreator(){
+  const step=creatorData.step;document.getElementById("stepMark").textContent=["一 / 三","二 / 三","三 / 三"][step-1];document.getElementById("creatorTitle").textContent=["写下名姓","选择出身","择定流派"][step-1];
+  [1,2,3].forEach(i=>document.getElementById(`creatorStep${i}`).classList.toggle("hidden",i!==step));document.getElementById("creatorPrev").disabled=step===1;document.getElementById("creatorNext").textContent=step===3?"执笔开篇":"下一步";
+  document.getElementById("originChoices").innerHTML=Object.entries(ORIGINS).map(([id,o])=>`<button class="choice-card ${creatorData.origin===id?"selected":""}" data-origin="${id}"><b>${o.name}</b><span>${o.desc}</span></button>`).join("");
+  document.getElementById("schoolChoices").innerHTML=Object.entries(SCHOOLS).map(([id,s])=>`<button class="choice-card ${creatorData.school===id?"selected":""}" data-school="${id}"><b>${s.name}</b><span>${s.role}<br>${s.mechanic}</span></button>`).join("");
+  document.querySelectorAll("[data-origin]").forEach(b=>b.onclick=()=>{creatorData.origin=b.dataset.origin;renderCreator()});document.querySelectorAll("[data-school]").forEach(b=>b.onclick=()=>{creatorData.school=b.dataset.school;renderCreator()})
+}
+function creatorNext(){
+  if(creatorData.step===1){
+    if(!document.getElementById("charName").value.trim()){toast("请先写下角色姓名。","bad");return}
+    creatorData.step=2;renderCreator();return
+  }
+  if(creatorData.step===2){if(!creatorData.origin){toast("请选择一种出身。","bad");return}creatorData.step=3;renderCreator();return}
+  if(!creatorData.school){toast("请选择一种战斗流派。","bad");return}
+  state=freshState();const g=document.getElementById("charGender").value;
+  state.player.name=document.getElementById("charName").value.trim();state.player.gender=g==="自定义"?(document.getElementById("charCustomGender").value.trim()||"江湖中人"):g;
+  state.player.look=document.getElementById("charLook").value.trim()||"风尘仆仆，目光清亮";state.player.title=document.getElementById("charTitle").value.trim()||"听雨客";state.player.origin=creatorData.origin;state.player.school=creatorData.school;
+  applyOriginAndSchool();addHistory("在汴河夜雨中踏入江湖。");autoSave();showGame()
+}
+function showGame(){
+  document.getElementById("landing").classList.add("hidden");document.getElementById("creator").classList.add("hidden");document.getElementById("game").classList.remove("hidden");document.getElementById("sceneArea").innerHTML=`<section class="scene"><div class="chapter-kicker" id="chapterKicker"></div><h1 id="sceneTitle"></h1><div class="story-text" id="storyText"></div><div class="delta-log" id="deltaLog"></div></section><section class="choices" id="choices"></section>`;
+  clearInterval(playTimer);playTimer=setInterval(()=>{if(state){state.playSeconds=(state.playSeconds||0)+30;autoSave()}},30000);if(state.currentEnding)endGame(state.currentEnding);else render()
+}
+
+document.getElementById("newGameBtn").onclick=()=>showCreator(true);document.getElementById("continueBtn").onclick=loadAuto;
+document.getElementById("creatorBack").onclick=()=>{document.getElementById("creator").classList.add("hidden");document.getElementById("landing").classList.remove("hidden")};
+document.getElementById("creatorPrev").onclick=()=>{creatorData.step=Math.max(1,creatorData.step-1);renderCreator()};document.getElementById("creatorNext").onclick=creatorNext;
+document.getElementById("charGender").onchange=e=>document.getElementById("customGenderWrap").classList.toggle("hidden",e.target.value!=="自定义");
+document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openPanel(b.dataset.open));document.getElementById("modalClose").onclick=closeModal;document.getElementById("modalWrap").onclick=e=>{if(e.target.id==="modalWrap")closeModal()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+if(localStorage.getItem(SAVE_KEY))document.getElementById("continueBtn").classList.remove("hidden");
+applySettings();
+window.__BIANHE_TEST__={
+  freshState,STORY,SCHOOLS,NPCS,DUNGEONS,ACHIEVEMENTS,ENDINGS,EQUIPMENT_DB,ITEMS,ENEMIES,
+  conditionResult,reviveState,enterNode,startBattle,battleAction,equipItem,unequipItem,useItem,
+  completeDungeon,resolveEnding,applyEffects,fortAction,doBreakthrough,realmNeed,manualSave,manualLoad,
+  autoSave,loadAuto,unlockAchievement,getState:()=>state,setState:x=>{state=x}
+};
+})();
+</script>
+</body>
+</html>
