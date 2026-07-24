@@ -61,6 +61,9 @@
     .choice-card span{display:block;font-size:12px;line-height:1.55;color:var(--ink-2)}
     .school-grid .choice-card{min-height:102px}
     .creator-actions{display:flex;gap:10px;margin-top:20px}.creator-actions .btn{flex:1}
+    .world-news{margin-top:18px;padding:12px 14px;border-left:3px solid var(--gold);background:rgba(111,78,42,.07);font-size:.92em;color:var(--muted)}
+    .world-news b{display:block;color:var(--ink);margin-bottom:6px}.world-news p{margin:5px 0;line-height:1.65}
+    .route-card{border-color:rgba(130,77,32,.35)}.route-card.active{box-shadow:inset 3px 0 0 var(--red)}
 
     .game{padding-bottom:calc(78px + var(--safe-bottom));min-height:100dvh}
     .statusbar{position:sticky;top:0;z-index:20;background:rgba(22,20,16,.97);color:#e9ddc0;padding:10px 12px;border-bottom:1px solid #5e4c30;box-shadow:0 5px 18px rgba(0,0,0,.24)}
@@ -131,14 +134,14 @@
       <button class="btn ghost hidden" id="continueBtn">续写前尘</button>
       <button class="btn ghost" data-open="archive">江湖图鉴</button>
     </div>
-    <div class="continue-note">江湖纪元 V2 · 无需登录 · 自动存档 · 可离线游玩</div>
+    <div class="continue-note">江湖纪元 V3 · 九线并行 · 无需登录 · 自动存档</div>
   </section>
 
   <section class="screen creator hidden" id="creator">
     <div class="creator-head">
       <button class="btn small" id="creatorBack">返回</button>
       <h2 id="creatorTitle">写下名姓</h2>
-      <span class="step-mark" id="stepMark">一 / 三</span>
+      <span class="step-mark" id="stepMark">一 / 五</span>
     </div>
     <div id="creatorStep1" class="form-grid">
       <label class="field">角色姓名<input id="charName" maxlength="8" placeholder="如：沈砚秋"></label>
@@ -147,13 +150,22 @@
       <label class="field">外貌特征<input id="charLook" maxlength="24" placeholder="如：眉目疏淡，左腕系红绳"></label>
       <label class="field">江湖称号<input id="charTitle" maxlength="12" placeholder="如：听雨客"></label>
     </div>
-    <div id="creatorStep2" class="hidden">
+    <div id="creatorStep2" class="hidden form-grid">
+      <label class="field">你最放不下的执念<input id="charObsession" maxlength="28" placeholder="如：替无名者讨回姓名"></label>
+      <label class="field">你不愿被人知道的秘密<input id="charSecret" maxlength="36" placeholder="如：曾替仇家送过一封信"></label>
+      <p class="continue-note">执念与秘密不会被当作装饰。它们会改变开篇、NPC试探、心境突破与终局回响。</p>
+    </div>
+    <div id="creatorStep3" class="hidden">
       <p>出身决定初始资源、关系与专属见闻，但不会锁死你的道路。</p>
       <div class="choice-grid" id="originChoices"></div>
     </div>
-    <div id="creatorStep3" class="hidden">
-      <p>十一脉武学皆可通往巅峰。每一流派拥有八式武学、四项天赋、双进阶路线与独立核心机制。</p>
+    <div id="creatorStep4" class="hidden">
+      <p>十一脉武学皆可通往巅峰。每一流派拥有八式武学、六项天赋、双进阶路线与独立核心机制。</p>
       <div class="choice-grid school-grid" id="schoolChoices"></div>
+    </div>
+    <div id="creatorStep5" class="hidden">
+      <p>选一件陪你入江湖的旧物。它不是单纯加数值，也可能在很久以后替你证明一件往事。</p>
+      <div class="choice-grid" id="keepsakeChoices"></div>
     </div>
     <div class="creator-actions">
       <button class="btn" id="creatorPrev">上一步</button>
@@ -208,7 +220,7 @@
 (() => {
 "use strict";
 const SAVE_KEY="bianheNight.auto.v1", META_KEY="bianheNight.meta.v1", SLOT_PREFIX="bianheNight.slot.";
-const VERSION=2, REALMS=["初窥门径","略有小成","融会贯通","炉火纯青","登峰造极","返璞归真","天人合一"];
+const VERSION=3, REALMS=["初窥门径","略有小成","融会贯通","炉火纯青","登峰造极","返璞归真","天人合一"];
 const SLOTS=["武器","头部","上衣","护腕","腰带","鞋履","项链","戒指","护符"];
 const QUALITIES=["凡品","良品","上品","珍品","绝品","百炼","神兵"];
 const STATUS_NAMES={poison:"中毒",bleed:"流血",stun:"眩晕",root:"定身",armorBreak:"破甲",weak:"虚弱",burn:"灼烧",cold:"寒冷",shield:"护盾",regen:"回春",hidden:"隐匿",berserk:"狂暴"};
@@ -220,6 +232,13 @@ const ORIGINS={
   orphan:{name:"江湖孤儿",desc:"没有门第可依，最懂巷陌与人心。",stats:{agility:4,luck:3,notoriety:1},item:"半枚铜铃",relation:{linQue:{favor:4,trust:1}},exclusive:"可听懂市井黑话。"},
   hermit:{name:"隐世门徒",desc:"师门不在名册上，旧誓却如影随形。",stats:{insight:5,crit:3,mpMax:14},item:"无字残页",relation:{heZhaoyin:{favor:1,trust:3}},exclusive:"能识破照夜璧的伪造气机。"},
   zhibeiyou:{name:"帮会《知北游》",desc:"走南闯北的闲人同盟，消息比马快。",stats:{reputation:3,agility:2,wealth:80},item:"知北游木牌",relation:{yeShuang:{favor:3,trust:2}},exclusive:"可借用帮会驿站与密语。"}
+};
+const KEEPSAKES={
+  rainLetter:{name:"被雨晕开的旧信",desc:"落款已看不清，纸筋里却藏着知北游的驿纹。",item:"blankPage",tendency:"message"},
+  namelessArrow:{name:"没有刻名的旧箭",desc:"箭头经历过边关风雪，第八处刻痕始终空着。",item:"oldArrow",tendency:"border"},
+  halfBell:{name:"不会响的半枚铜铃",desc:"只有靠近被抹去的名字时，它才在掌心发热。",item:"copperBell",tendency:"identity"},
+  medicineBowl:{name:"有裂纹的药碗",desc:"师父说，分药的原则比药方更容易害人。",item:"needleBox",tendency:"plague"},
+  boneChip:{name:"第十八面命筹",desc:"天策、杯中酒与十七都不承认见过它。",item:"fateChip",tendency:"truth"}
 };
 
 const SCHOOLS={
@@ -316,17 +335,17 @@ const ADVANCED_SKILLS={
   ]
 };
 const PASSIVE_EXTENSIONS={
-  tieyi:["岿然：护盾破碎时获得十二点不动势","同袍：交涉失败后的首轮承伤降低"],
-  suwen:["药理：同类药品连续使用效果不衰减","悬壶：救治剧情角色可提高陌生人信任"],
-  suimeng:["寸阴：隐匿期间会心伤害提高","绝踪：逃跑失败时保留一层影痕"],
-  shenxiang:["知音：观察敌人会补全一种音律","焦尾：灼烧与寒冷可同时存在"],
-  jiuling:["养契：契灵存活到战后会增长熟练度","还魂：纸傀可替你承受一次致命伤，但可能永久失去"],
-  xuehe:["铁骑：第一次普通攻击额外积攒战意","不屈：气血越低，受到的治疗越高"],
-  canglan:["归潮：退潮回气时额外清除寒冷","破浪：环境行动命中后立即涨潮"],
-  xuanji:["拆解：分解装备偶尔返还稀有机括","预置：观察后第一次机关技能少耗三点内力"],
-  hongyin:["余韵：终曲后保留最后一种音色","同悲：低气血时治疗音色更强"],
-  chaoguang:["月痕：明暗每次切换提高少量会心","镜返：护盾破碎时对敌施加虚弱"],
-  longyin:["藏锋：满剑意时普通攻击不再溢出","问心：境界试炼失败时保留更多修为"]
+  tieyi:["岿然：护盾破碎时获得十二点不动势","同袍：交涉失败后的首轮承伤降低","担山：环境中有人需要保护时，不动势上限提高","卸甲：主动解除护盾可把余势化为破甲"],
+  suwen:["药理：同类药品连续使用效果不衰减","悬壶：救治剧情角色可提高陌生人信任","留方：首次调配新药会保留一份药引","逆针：净化失败会揭示一种隐藏病因"],
+  suimeng:["寸阴：隐匿期间会心伤害提高","绝踪：逃跑失败时保留一层影痕","照影：观察后可看见敌人的撤退路线","留名：主动现身的一击会提高伙伴敬意"],
+  shenxiang:["知音：观察敌人会补全一种音律","焦尾：灼烧与寒冷可同时存在","散拍：打断自身连奏可解除一次控制","山风：不使用终曲结束战斗可恢复额外内力"],
+  jiuling:["养契：契灵存活到战后会增长熟练度","还魂：纸傀可替你承受一次致命伤，但可能永久失去","问灵：无名死者会提供一条相互矛盾的证词","解契：主动送走契灵可压低反噬并提高其下一次威力"],
+  xuehe:["铁骑：第一次普通攻击额外积攒战意","不屈：气血越低，受到的治疗越高","血路：低气血时环境行动不受定身影响","止戈：满战意选择交涉会令对手更愿意停手"],
+  canglan:["归潮：退潮回气时额外清除寒冷","破浪：环境行动命中后立即涨潮","记名：水下场景更易发现沉没者遗物","回湾：退潮回气溢出时转化为少量护盾"],
+  xuanji:["拆解：分解装备偶尔返还稀有机括","预置：观察后第一次机关技能少耗三点内力","民器：用机关救援平民会永久改良图纸","逆算：机关被破坏后立即获得一次观察机会"],
+  hongyin:["余韵：终曲后保留最后一种音色","同悲：低气血时治疗音色更强","听众：场上每名仍清醒的角色都增强一分音色","止乐：主动停奏可驱散一次对意志的操控"],
+  chaoguang:["月痕：明暗每次切换提高少量会心","镜返：护盾破碎时对敌施加虚弱","同辉：承认自身过失的剧情选择强化明辉","潜月：隐藏秘密时幽影更强，但信任增长更慢"],
+  longyin:["藏锋：满剑意时普通攻击不再溢出","问心：境界试炼失败时保留更多修为","收剑：放弃致命一击会把剑意转成治疗","回鸣：每次回答流派心问都会改写绝学描述"]
 };
 const SCHOOL_BRANCHES={
   tieyi:["镇关：护盾与保护","破阵：反击与破甲"],suwen:["济世：持续治疗","问毒：净化与削弱"],
@@ -857,6 +876,180 @@ Object.assign(STORY,{
   sq_beast_1:{chapter:"福地 · 檐下夜啼",place:"栖霞福地",title:"不是被驯服",text:"窥探者留下照骨楼的蜡封，却故意踩着皇城司靴印。黑兽没有接受你做的窝，只在雨最急时躲进檐下。它会替你闻出毒物，也会叼走不喜欢的摆件。\n\n它留下不是被驯服，而是判断这里暂时值得相信。",options:[{label:"在福地履历里记它为访客，而非财物",action:"returnSide",effects:{world:{sqBeastDone:true},stats:{luck:2},items:{soulThread:2}}}]}
 });
 
+Object.assign(NPCS,{
+  songHanchan:{name:"宋寒蝉",identity:"民间女讼师",personality:"锋利、坦荡、不信迟来的公道",goal:"让无权者也能在灯下说完证词",secret:"她曾用一份假证救下真正无辜的人",stance:"民间",quest:"御街无官",fates:["开起不挂官印的讼馆","为保护证人背下伪证之罪"]},
+  peiTwelve:{name:"裴十二",identity:"夜狱书吏",personality:"胆小、细致、记性惊人",goal:"保住第八间牢房中的秘密",secret:"他替三十七名证人伪造过死亡",stance:"大理寺",quest:"第八碗牢饭",fates:["成为证人名册的守灯人","从所有卷宗中消失"]},
+  alechi:{name:"阿勒迟",identity:"朔庭青年将领",personality:"骄傲、务实、厌恶祖辈仇恨",goal:"让边民不再替朝堂故事送命",secret:"他也守着一面没有姓名的敌军碑",stance:"朔庭",quest:"雪线半刻",fates:["促成边民互市","被两边主战派同时视作叛徒"]},
+  wangJingce:{name:"王景策",identity:"雁门粮运使",personality:"圆滑、精算、相信一切皆可折价",goal:"用黑市效率取代腐朽军需",secret:"年轻时曾免费散粮，结果整支运输队因断饷哗变",stance:"朝堂",quest:"空粮袋",fates:["戴罪重建边粮制度","成为两国军火最大的中间人"]},
+  shenWanchou:{name:"沈万筹",identity:"四海栈元老",personality:"沉稳、无情、从不赖账",goal:"让商路大到任何权力都无法摧毁",secret:"金鳞契把罪责拆给了数千个普通持有人",stance:"商会",quest:"金鳞千契",fates:["交出商路共同议事","与全部账本一同沉入镜湖"]},
+  cenHenian:{name:"岑鹤年",identity:"疫坊医官",personality:"慈悲、激进、把后果算作必要代价",goal:"逼朝廷建立免费的常设药坊",secret:"他故意放大恐慌，间接造成踩踏与误服",stance:"疫坊",quest:"半帖药方",fates:["守着万家药灯终老","以救人之名成为新的药权者"]},
+  baizhiyuan:{name:"白纸鸢",identity:"百晓楼少主",personality:"温雅、敏锐、擅长把谎言写得有用",goal:"让榜单维持江湖脆弱的平衡",secret:"她故意捏造过数位侠客替百姓保存希望",stance:"百晓楼",quest:"榜纸无风",fates:["开放百榜给各地共同记录","成为最懂操纵天下目光的人"]},
+  liuTingyun:{name:"柳停云",identity:"前天骄榜首",personality:"孤傲、疲惫、憎恨所有第一",goal:"证明榜首注定吞噬身边的人",secret:"他曾主动退榜，百晓楼却用另一个名字继续写他",stance:"百晓楼",quest:"天下第一之夜",fates:["亲手撕下第一张榜纸","把所有榜首拖入无休止的决斗"]},
+  noGate:{name:"无门客",identity:"无师承的武学抄录者",personality:"平静、好学、厌恶门第垄断",goal:"创造任何人都能学的天下同招",secret:"每一次抄录都会抹去原武学为何而生的部分意义",stance:"无门",quest:"第十二张拜帖",fates:["把基础武学交还民间","让天下招式只剩最高效率的杀法"]},
+  noFace:{name:"无面先生",identity:"无名暗市掌册人",personality:"礼貌、冷淡、尊重交易胜过血缘",goal:"让人能购买第二次人生",secret:"幼时因没有合法身份，眼看母亲死在医馆门外",stance:"暗市",quest:"焚册房",fates:["建立由本人决定公开旧名的新册","成为所有假名背后的唯一真名"]},
+  jiangTingdu:{name:"江听渡",identity:"知北游掌卷人",personality:"温厚、谨慎、习惯替远方承担决定",goal:"避免一封真实消息害死更多人",secret:"他曾如实送出军情，导致两个村庄遭到报复",stance:"知北游",quest:"十二驿失火",fates:["交出中央掌卷权","用缓信制度把天下困在善意的迟到里"]},
+  lemonTea:{name:"柠檬茶少甜",identity:"绝色榜第一与州桥茶摊传闻",personality:"每位目击者说法都不同",goal:"无人能够确认",secret:"可能是多人共用的名字，也可能从来不存在",stance:"百晓楼",quest:"一杯少甜",fates:["继续出现在不可能的地方","某日忽然从所有榜纸上消失"]}
+});
+
+Object.assign(ENEMIES,{
+  courtShadow:{name:"皇城司千户·周烬",level:12,hp:215,attack:25,defense:13,weak:"公开见证与相互矛盾的证词",resist:"眩晕",background:"他曾依法办案，却见权贵把判决改成一张空白纸。",moves:["锁证","夺供","封街令"],boss:true,phase2:{name:"周烬·无印执法",hp:145,attack:31,defense:9,moves:["白纸定罪","灭灯","先斩后奏"],hint:"只要仍有三方见证，空白供状就无法替所有人作答。"},negotiable:true},
+  grainEnvoy:{name:"粮运使·王景策",level:15,hp:250,attack:29,defense:15,weak:"黑市账本与空粮袋",resist:"虚弱",background:"他相信腐败的秩序不如诚实的贪婪有效。",moves:["封仓刀","粮车阵","折价人命"],boss:true,phase2:{name:"王景策·焚账",hp:170,attack:36,defense:10,moves:["断饷","火油车","万石皆价"],hint:"他的亲兵同样断粮。公开完整分账，阵脚会先从内部松动。"},negotiable:true},
+  goldenContract:{name:"金鳞契主·沈万筹",level:16,hp:260,attack:30,defense:16,weak:"船工工钱与分散持契人",resist:"定身",background:"他把每桩罪拆成千份，于是人人获利，也人人自称无罪。",moves:["契锁","钱雨","封渡"],boss:true,phase2:{name:"沈万筹·沉金照月",hp:175,attack:37,defense:11,moves:["焚契","沉船","万人担保"],hint:"只烧债契会伤到工钱；先辨出墨色不同的三类账页。"},negotiable:true},
+  panicHealer:{name:"千灯疫坊·恐惧人潮",level:14,hp:235,attack:27,defense:12,weak:"药材分配原则与安定人心",resist:"中毒",background:"真正的敌人不只是一名医者，而是封门、谣言、抬价与错误治疗叠成的人潮。",moves:["推挤","夺药","封坊火"],boss:true,phase2:{name:"岑鹤年·执方不退",hp:150,attack:32,defense:9,moves:["忘忧针","断药秤","以乱求治"],hint:"说出你一直坚持的分药原则，比揭穿他更能让人群停下。"},negotiable:true},
+  rumorSelf:{name:"榜上之人·你的传闻",level:17,hp:275,attack:34,defense:14,weak:"拒绝表演与承认真实过失",resist:"虚弱",background:"它由朋友的赞美、仇家的控诉与说书人的夸张共同写成。",moves:["夸大的绝学","借名行侠","万众注目"],boss:true,phase2:{name:"榜上之人·天下第一",hp:190,attack:41,defense:10,moves:["众口铸身","黑榜恶名","绝色无相"],hint:"它靠观众相信而存在。停手、离台或说出不光彩的真事都能削弱它。"},negotiable:true},
+  sameMove:{name:"无门客·天下同招",level:18,hp:290,attack:36,defense:15,weak:"不以取胜为目的的流派行动",resist:"破甲",background:"这一式会自动改成最有效的杀法，唯独无法理解为何有人收剑。",moves:["万式归一","照招复制","无师杀法"],boss:true,phase2:{name:"天下同招·无隙",hp:195,attack:43,defense:11,moves:["夺义","绝学同形","以胜为道"],hint:"保护旁人、治疗对手、拆掉机关或主动退步，都是它没有收录的答案。"},negotiable:true},
+  nameCollector:{name:"无面先生·焚册机关",level:19,hp:300,attack:38,defense:16,weak:"本人选择的新名字与骨骰第十八面",resist:"中毒",background:"他不恨名字，只恨名字被制度用来决定谁配活下去。",moves:["削名","死籍锁","借罪"],boss:true,phase2:{name:"万人无面·册火",hp:205,attack:45,defense:11,moves:["真名焚毁","百面替身","身份抹除"],hint:"机关只能辨认旧籍。一个由本人刚刚选定、尚未入册的名字不会被锁住。"},negotiable:true},
+  stationFire:{name:"十二驿同夜之火",level:16,hp:265,attack:31,defense:13,weak:"拆分消息、注明来源与代价",resist:"灼烧",background:"火来自官军、商会、边军、照骨楼与被谣言激怒的百姓，并没有唯一首恶。",moves:["截信箭","换封","驿火连营"],boss:true,phase2:{name:"江听渡·缓信之网",hp:175,attack:36,defense:10,moves:["迟到的真相","善意删改","万里一声"],hint:"若拒绝发送统一答案，让各驿各自署名，他的中央掌卷便失去控制。"},negotiable:true}
+});
+["courtShadow","grainEnvoy","goldenContract","panicHealer","rumorSelf","sameMove","nameCollector","stationFire"].forEach((id,i)=>{
+  const e=ENEMIES[id];e.level=8+i%3;e.hp=155+i*5;e.attack=19+i%4;e.defense=9+i%3;e.phase2.hp=105+i*4;e.phase2.attack=24+i%4;e.phase2.defense=7+i%2;
+});
+ENEMIES.routeWei={name:"魏无明·三重旧忆",level:10,hp:175,attack:22,defense:11,weak:"互相矛盾的证词与半枚铜铃",resist:"虚弱",background:"这不是魏无明全部力量，而是机枢用三段受害记忆拼出的守门影像。",moves:["收尸人之手","旅客诘问","照骨寄证"],boss:true,phase2:{name:"三忆合一·执璧影",hp:118,attack:27,defense:8,moves:["唯一口供","删去异议","痛苦放大"],hint:"不要反驳痛苦本身；指出三段记忆彼此矛盾却都该被保留。"},negotiable:true};
+
+const ROUTES={
+  truth:{name:"照夜旧案",tendency:"求真",entry:"把烧焦星图迎向灯火",question:"真相会伤害活人时，死者是否仍有权要求它被公开？",boss:"routeWei",rumors:["魏无明找到另一名能开启星图的人。","雁门旧碑与镜湖沉船先后被人毁去一处。","照夜机枢开始把陌生人的执念投进汴京梦里。"],acts:[
+    {title:"三份都是真的账",place:"丰乐仓旧账房",text:"顾临川找出三套纸、墨、官印都真的旧账：一套说押运队叛逃，一套说全军阵亡，第三套说那支队伍从未存在。叶双白倚窗听雨：“所谓原本，也许只是活到最后的一份。”林鹊只问名单里有没有父亲。",options:["把三账交给不同的人互相校验","偷走一账，阻止任何一方拼成唯一答案","让知北游公开三份矛盾原文"]},
+    {title:"调查也会毁掉证据",place:"雁门·镜湖·疫坊岔路",text:"三处原始现场同时告急：雁门旧碑今夜会被焚，镜湖水寨天明受剿，疫坊幸存者正被转移。你只能先去一处。你选择的顺序不只改变你看见的真相，也会决定另外两处还能剩下什么。",options:["先救疫坊的活证人","先拓下雁门改令墨痕","先潜入镜湖沉船暗舱"]},
+    {title:"魏无明的三张脸",place:"照骨楼外·旧茶棚",text:"替无名死者收尸的黑衣人、与你争论真相的旅客、匿名寄证的照骨客，原来都是魏无明。他让你看自己从死人堆里爬出的记忆，却提醒那段痛苦也许已被照夜放大：“若受害者也会记错，你还肯让他作证么？”",options:["承认痛苦不是完美证据，却仍值得被听见","指出他正用受害者身份垄断解释","把判断权交回仍活着的旧案幸存者"]},
+    {title:"万镜开门",place:"天机秘府·星镜长廊",text:"照夜机枢把你曾放弃的人、说过的谎与自认正确的选择逐一投在镜中。魏无明并未立刻出手，他要你先选一段最愿删掉的记忆。镜外，皇城司也在破门。谁先掌机枢，谁便能替天下决定该记住什么。",boss:true,options:["破镜迎战执璧的魏无明","呼唤所有证人各说一段互相矛盾的记忆","先拆扩音机括，只保留未经解释的记录"]},
+    {title:"谁有权记住",place:"天机秘府·照夜中枢",text:"机枢停在黎明前最后一刻。死者姓名、幸存者新生活和朝堂稳定无法同时不受伤。林鹊把半铃放在你掌心，没有求你替他选。问夜在鞘中轻鸣——这一回，代价必须写在方案旁边。",options:[]}
+  ],endings:[
+    {name:"众证照夜",title:"万声录夜人",desc:"你公开原始记录，也把异议、来源与可能伤害一并写在旁边。旧案没有得到一个整齐答案，却终于不再只有强者能解释。",hint:"另一次选择也许会保全更多仍活着的人。"},
+    {name:"无名守灯",title:"半铃守名者",desc:"你封住放大执念的机枢，只公开死者姓名，并把余下证词分散给互不信任的保管人。真相变慢了，追杀也暂时停下。",hint:"若把所有原始记忆交给天下，局势会更加锋利。"},
+    {name:"执璧人",title:"照夜新主",desc:"你接过机枢，承诺只在危难时替天下作答。最初几年，你确实做得很好；后来人们开始害怕，你认为什么才算危难。",hint:"二周目会有人带着你这一世删去的记忆回来。"}
+  ]},
+  law:{name:"大理寺无字案",tendency:"守序",entry:"拾起追兵掉落的空白供状",question:"法律被权势利用时，应该修补、绕过还是摧毁？",boss:"courtShadow",rumors:["第八间牢房仍每天有人送饭，却没人见过囚犯。","十三名凶手开始共同使用一个死人的名字。","御街夜审被朝堂定作聚众谋逆。"],acts:[
+    {title:"七张空白供状",place:"大理寺夜狱",text:"七名互不相识的囚犯能背出一字不差的供词，纸面却全是白。第八间牢房没有人，裴十二仍每日送饭。顾临川要求你遵程序，宋寒蝉却说程序已经先把无辜者关进来了。雨水从牢窗滴在同一处墨痕上。",options:["查纸筋水印与送饭路线","伪造第八名囚犯的释放文书","先把七人转移，再补合法手续"]},
+    {title:"清白也能被伪造",place:"旧卷库",text:"无字卷宗一半掩盖冤案，另一半却替证人制造假死身份。全部公开，旧罪可以重审，三十七名靠假籍活下来的人也会暴露。顾临川要先建保护制度，宋寒蝉说每拖一日，又有新人入狱。",options:["先取得证人本人同意再公开","封住卷库，限期建立保护规则","公开罪案部分，隐去活证人的新姓名"]},
+    {title:"十三案同审",place:"汴京十三坊",text:"毒杀、纵火、军械偷换与劫船同时指向一个十七年前已死的人。真相是十三名凶手共同借用这个方便的名字。若逐案追查，他们会互相灭口；若放出“死人复活”的消息，又会让全城恐慌。",options:["逐案保护证人，不急着宣布共同凶手","用一份可撤回的假悬赏逼十三人行动","在州桥公开死名的使用规则而非嫌犯名单"]},
+    {title:"御街无印夜审",place:"御街雨棚",text:"朝堂禁止公开审理。顾临川撤去官印，宋寒蝉点起百盏民灯。百姓、证人、囚犯和官员都站在雨里。周烬准备了两套话术：你守程序，他便拖延；你破程序，他便说你比他更危险。",boss:true,options:["护住夜审，与周烬当街交锋","承认自己曾用假证，再让证人逐一质问","请互不信任的三方共同记录审理"]},
+    {title:"灯下之法",place:"御街黎明",text:"夜审没有正式判词，却已无人能把所有证词收回。顾临川把官帽放在案上，宋寒蝉展开一张仍然空白的新规。你要决定，这盏灯从今往后挂在官署、民间，还是握在一个足够强的人手里。",options:[]}
+  ],endings:[
+    {name:"明灯照卷",title:"公开审理奠基人",desc:"你建立公开审理与证人保护并行的规则。它缓慢、昂贵且常被钻空子，但任何人想改掉一份证词，都必须先面对许多双眼睛。",hint:"民间讼馆会走一条更自由也更危险的路。"},
+    {name:"御街无官",title:"灯下讼师",desc:"你与宋寒蝉离开官署，在御街开起不挂官印的讼馆。官府不承认你们，敲门的人却一天比一天多。",hint:"若留在制度内部，或许能更快改变更多案件。"},
+    {name:"铁案如山",title:"无印寺卿",desc:"你借此案进入权力中心，以雷霆手段重整大理寺。冤案确实减少了，可越来越少的人敢当面说你判错。",hint:"二周目中，被你压下的异议会组成另一份卷宗。"}
+  ]},
+  border:{name:"雁门烽雪",tendency:"守土",entry:"查看木匣缝里的第八支旧箭",question:"胜利是守住城池、保住百姓，还是让下一场战争不再发生？",boss:"grainEnvoy",rumors:["雁门三份战报彼此矛盾，关门仍未决定是否开启。","萧砚真刺伤父亲旧部，边军几乎兵变。","朔庭与本朝主战派同时在雪线集兵。"],acts:[
+    {title:"三份战报",place:"雁门关楼",text:"可靠斥候分别回报：敌军三日后到、敌军已绕过旧垒、敌军只是护送难民。关外风雪里挤着百姓，开门会耗粮并混入细作，闭门则有人今夜冻死。天策把断枪插在门缝，不替你作答。",options:["开小门分批验明难民","先派轻骑核实三份战报","闭正门却从旧地道接人"]},
+    {title:"粮车没有敌人",place:"雪原粮道",text:"失踪粮车并非全被朔庭劫走，而是王景策卖进两国共同的黑市。敌军同样有人倒粮。士卒在雪地厮杀，两边权贵却在一张桌上分银。此时公开账本会动摇军心，隐瞒又让下一批粮继续消失。",options:["先夺回粮车，再公开完整去向","与阿勒迟交换俘虏和黑市账页","当夜公布本方账本，也逼敌军查自己的"]},
+    {title:"两边的无名碑",place:"朔庭雪线",text:"阿勒迟停战半刻，带你看见朔庭一侧同样无名的石碑。十七年前，本朝押运队与接收降民的朔庭军都被灭口；两边朝堂都需要故事只剩一句“敌人背信”。萧砚真握刀的手第一次迟疑。",options:["共同拓下两面碑文","只带回本朝证据，先稳军心","让双方遗属各自写下名字再交换"]},
+    {title:"雪线三日",place:"雁门旧垒",text:"真正的大军抵达。你完成的工事、护送、筹粮与谈判永远少一项。王景策趁乱焚账，萧砚真要先杀他祭旗，阿勒迟则只给半个时辰停火。城墙在风里开裂，百姓已经踏上撤离的雪道。",boss:true,options:["夺下粮仓，与王景策决战","让两军饥兵共同见证粮账","放弃追凶，先用全部粮车撤民"]},
+    {title:"烽火之后",place:"雁门晨雪",text:"城可以守，百姓可以撤，短暂和盟也可以签，但三者不能都毫发无伤。朝堂使者带来封赏与问罪两份诏书，只等你选一个名字留下：名将、逃将，或双方都不承认的议和人。",options:[]}
+  ],endings:[
+    {name:"雪线和盟",title:"半刻停戈人",desc:"你促成边民互市与有限停战。两边朝堂都不承认这是一场胜利，边民却第一次能在同一座集市叫出彼此名字。",hint:"若选择死守，雁门会留下另一种更锋利的传奇。"},
+    {name:"守关名将",title:"雁门长城",desc:"你守住关城并为无名亡军正名。战争没有结束，但边军不再为一段被篡改的历史而战。",hint:"撤走百姓会失去城池，却可能保住更多未来。"},
+    {name:"空城千里",title:"负城行军者",desc:"你弃城护送百姓南撤。朝堂骂你逃将，十年后，流民在新的雪线外建起一座没有无名碑的新城。",hint:"二周目里，旧城将由另一个更残酷的人接管。"}
+  ]},
+  trade:{name:"镜湖沉金",tendency:"经世",entry:"辨认木匣所用的沉船木料",question:"养活万人、也替恶人运刀兵的商路，应归谁掌握？",boss:"goldenContract",rumors:["四海栈抬高粮价，镜湖上下游同时缺粮。","沈万筹封锁渡口，三百船工被写进债契。","沉金船载着全部账本驶向深湖。"],acts:[
+    {title:"一船三价",place:"镜湖粮渡",text:"同一船粮，官府要征作军粮，商会要高价卖往汴京，水寨要留下救湖边百姓。苏砚舟提出抵押粮船再买第二船，担保却是三百名无田船工的余生。算盘珠声密得像雨。",options:["先开一半粮给百姓，余粮换军需","拒绝拿船工做担保，寻找沿岸小仓","让官、商、寨三方共同押印共担亏损"]},
+    {title:"沉船不止一个凶手",place:"镜湖水下暗舱",text:"月末失踪船有的被水寨扣留，有的由商会骗保，还有一艘是船工主动沉下，只为摆脱还不完的债。杯中酒在水面放灯：“把他们都叫水匪最省事，也最像官府会写的答案。”",options:["替逃债船工建立新身份","保留骗保证据，隐去自沉船的位置","要求水寨归还被扣的救命药"]},
+    {title:"人人一份便无人有罪",place:"四海栈金鳞堂",text:"金鳞契把商路拆给船夫、官员、寺庙和富户数千人。人人获利，无人能单独毁掉它，也无人肯为运送刀兵负责。照夜残件的运输同样藏在无数普通货契中；追查它会撕破许多小商户的生计。",options:["只追溯决定货物用途的上层契","让小持契人共同决定商路禁运清单","公开所有持有人，接受粮价立刻震荡"]},
+    {title:"一夜开市",place:"镜湖月市",text:"沈万筹封渡逼朝廷与水寨屈服。苏砚舟私仓只够三日，唐云栖要劫粮，陆青禾想用劳作、物资和承诺建一夜新市。每一种办法都会制造新的债。湖心沉金船已经点起烧账的火。",boss:true,options:["登沉金船阻止沈万筹焚账","先开无银夜市，让百姓撑过三日","散布粮船将至的假消息暂压粮价"]},
+    {title:"沉金照月",place:"沉金船账舱",text:"烧掉全部账本，穷人摆脱债务，船工也失去工钱；保留全部账本，契约继续勒住无田之人；只烧债契，又必须有人判断哪一笔是债、哪一笔是应得。湖水已漫到最后一级木梯。",options:[]}
+  ],endings:[
+    {name:"万舟无主",title:"共议商路人",desc:"商路由沿途城镇、船工与商户共同议事。效率慢了，也再没有谁能一夜封锁全部渡口。",hint:"若由你亲自掌路，许多救援会更快，权力也更集中。"},
+    {name:"镜湖义渡",title:"不收穷人渡钱",desc:"你与唐云栖建立义渡联盟，保留工钱与货权，烧去逼人卖身的债契。小商户受了损失，你们用了多年才补回。",hint:"完全烧账会让更多人立刻自由，也会制造更大的混乱。"},
+    {name:"金满沉江",title:"焚契客",desc:"你让所有契约与金银沉入湖底。许多人一夜自由，也有无数小商户破产。后来江湖仍争论，那夜究竟是义举还是豪赌。",hint:"二周目里，失去账本的商路将落入武力最强者手中。"}
+  ]},
+  plague:{name:"人间疫火",tendency:"济世",entry:"追查红线上让人忘事的药香",question:"医者是否必须救每一个能救的人？",boss:"panicHealer",rumors:["温九针独自进入封锁疫坊后失去消息。","止痛药被抢空，假药与恐慌造成更多死者。","上元灯会照常点灯，疫病已混入人潮。"],acts:[
+    {title:"同一句遗言",place:"汴京城南疫坊",text:"死者临终都说“天亮前不要相信自己的记忆”。温九针发现共同之处不是接触照夜，而是都买过一批廉价止痛药。留在坊中能多救几人，追药源才能阻止下一批；锁门外已有家属拍得手掌出血。",options:["留下分诊，让温九针追药源","带一名轻症患者作证追查药铺","先把用药批次写在墙上交给所有家属"]},
+    {title:"药方只有一半",place:"千灯药棚",text:"岑鹤年的药能压症状，却会抹去近三日记忆。普通人付得起这个代价，关键证人喝下便再也说不出证词。药材只够一半，你必须确定原则：年幼、病重、能救别人者，或抽签。NPC记住的将是你的原则，不只是名单。",options:["病重者优先，不问身份","先救能继续照料他人的医工","公开数量，由患者与家属抽签"]},
+    {title:"善政的火种",place:"封坊药仓",text:"污染药材只造成部分死亡，更多人死于封门、抬价、踩踏与误服。岑鹤年承认自己故意放大恐慌，逼朝廷建立免费药坊。他上书二十七次无人理会，如今药坊建成，代价是许多本不必死的人。",options:["先让他继续救人，疫后公开受审","立即公开真相，接受药坊可能停摆","让死者家属共同决定他是否留在药坊"]},
+    {title:"上元千灯",place:"上元灯市·疫坊门",text:"疫病混入灯会。立刻封城会令城中断粮，不封则可能蔓延。魏无明愿以照夜残光压下恐惧，但病人会更容易服从施术者意志。人潮已撞开第一道药栏，岑鹤年抱着最后药箱不肯退。",boss:true,options:["护住药箱，闯入恐惧人潮","拒绝照夜镇痛，让百姓知情选择","接受短时镇痛，但公开记录每次施术"]},
+    {title:"最后一剂药",place:"熄灯后的药坊",text:"完整解药只够一个最早感染者；拆散药材能让更多人暂时活下去；公开半方可快速扩散，也会制造无数误用。朝廷、商会和民间药师都伸手来接这张纸。温九针问的不是交给谁，而是谁愿意把失败也写在方后。",options:[]}
+  ],endings:[
+    {name:"万家药灯",title:"民间药坊行首",desc:"你公开药方、试验记录与已知风险，建立互相校验的民间药坊。药效不完美，却不再由单一势力垄断。",hint:"集中制作会救得更快，也更容易被控制。"},
+    {name:"医者无情",title:"冷秤医官",desc:"你用统一原则分配有限药材，救活了统计上最多的人。很多人感激，也有人永远无法原谅那只秤。",hint:"让家属参与会更慢，却可能分担选择的重量。"},
+    {name:"一方禁药",title:"断方人",desc:"你毁去可被用于控制意志的关键步骤。未来仍有人死于无法治愈的疫病，但再无人能借治疗让一城人听话。",hint:"二周目会出现一份从残方自行补出的危险药谱。"}
+  ]},
+  ranking:{name:"百榜风云",tendency:"求名",entry:"查看追兵腰牌上的百晓楼榜号",question:"一个人是自己的行为，还是天下人口中的名字？",boss:"rumorSelf",rumors:["一个昨夜死去的人登上风云榜第一。","柳停云连续击败天骄前三，所有榜首收到夜榜帖。","百晓楼把你的名字印在数张彼此矛盾的榜上。"],acts:[
+    {title:"榜上死人",place:"州桥榜墙",text:"风云榜第一是昨夜刚死的人，悬赏榜第一根本不存在，绝色榜第二至第十却全写成你的名字。从此有人声称见过你行善、杀人、欠债——全是你没做过的事。茶摊上留着一杯少甜柠檬茶，杯底压着你的画像。",options:["先找替你写传闻的说书人","公开一件自己真正做错的事压住神话","撕下画像，却保留所有不同证词"]},
+    {title:"榜单制造事实",place:"百晓楼印榜房",text:"榜单会让无名剑客遭遇挑战，让普通商人凭虚名借到巨款，也让被列绝色榜的人遭受绑架。白纸鸢承认会调榜保护危险人物、给无名侠客机会。善意操纵仍是谎言，却确实救过人。",options:["要求每次调榜标注出资人与目的","保留保护性假名，取消身体与财富的猎奇排名","让各地另印自己的版本相互争辩"]},
+    {title:"柠檬茶少甜",place:"不可能出现的茶棚",text:"你先后见到斗笠女子、白发老人、清亮少年；第四次，茶棚后没有人，只有一杯少甜茶。每个版本都有证人。白纸鸢说，若绝色榜第一永远无法确认，便没人能杀掉第一取而代之。她没有承认这是她编的。",options:["接受这个名字可以属于多人","继续追查，却不强迫任何目击者统一说法","把自己的画像留在茶摊，试探下一次传闻"]},
+    {title:"天下第一之夜",place:"百晓楼夜榜会",text:"所有榜首被迫接受公开挑战，随后逐一失踪。柳停云要证明只要天下仍相信“第一”，榜首就没有活路。百晓楼把你的善恶传闻编成一个会战斗的“榜上之人”，它比你更像众人期待的你。",boss:true,options:["与自己的江湖传闻决斗","走下擂台，不给榜上之人观众","请柳停云亲口讲完他退出榜单后的遭遇"]},
+    {title:"名字从榜上落下",place:"百晓楼屋顶",text:"榜纸漫天飞散。毁掉榜单会使追杀减少，也让无名侠客失去被看见的机会；接管榜单能保护一些人，也意味着你决定谁值得被看见。远处茶摊上，柠檬茶少甜似乎朝你举了举杯。",options:[]}
+  ],endings:[
+    {name:"百榜无名",title:"榜外人",desc:"你抹去自己的全部榜单记录。许多声望能力随之失效，仇家也很难再用那个被夸大的你追踪你。",hint:"若开放多张榜，名声仍会存在，只是不再只有一个版本。"},
+    {name:"众声江湖",title:"万榜执笔人",desc:"各地百姓都能印自己的榜，并必须标注来源、出资与异议。谣言更多了，任何一张纸却再难自称天下唯一。",hint:"接过柠檬茶少甜之名会开启另一段身份谜案。"},
+    {name:"荒唐大侠",title:"荒唐榜第一",desc:"你主动把最离谱的真实经历写上荒唐榜。高手笑你不成体统，普通百姓却最愿意来找你，因为他们知道你不会只挑体面的麻烦。",hint:"二周目里，某人会冒用你的荒唐名声做一件极严肃的恶事。"}
+  ]},
+  martial:{name:"十一门问武",tendency:"问武",entry:"辨出追兵使用的失传基础步法",question:"武学属于门派、创造者，还是所有需要自保的人？",boss:"sameMove",rumors:["十一门最基础的一招同时失窃。","年轻弟子开始死于本门入门式。","青崖论武变成械斗，无门客正在抄录所有绝学。"],acts:[
+    {title:"第十二张拜帖",place:"栖霞福地",text:"天下十一门都收到论武帖，你的福地却多出第十二张，只写“天下武学，本来同源”。失窃的不是绝学，而是每门最基础的一招。穆寒山震怒，裘明岫却问：若只偷最普通的东西，来人究竟想证明什么？",options:["比对十一门基础招的起手动作","把自己流派第一式教给护村人","封存拜帖，却公开失窃详情"]},
+    {title:"旧招杀新徒",place:"十一门驿院",text:"弟子接连死于本门入门式。铁衣架势像军阵，素问针法源于止血，神相指法同更夫梆声，九灵契印像难民互认手势。所谓正统，可能只是后人把普通人的求生动作收入门墙。",options:["请老兵、稳婆与更夫共同作证","先阻止门派互相复仇，再谈归属","承认本门也曾把民间技艺写成独门"]},
+    {title:"无门客",place:"青崖石阶",text:"无门客每次都使你刚看过的招式。他要创一门人人可学的天下同招，却把铁衣为何守、素问为何救、龙吟为何出剑都削成最高效率的杀法。普及带来力量，也正抹去武学最初保护人的理由。",options:["与他交换一式，但保留招式故事","邀请被门派拒绝者参加青崖论武","拒绝独占，也拒绝把所有武学磨成同形"]},
+    {title:"青崖问心",place:"青崖论武台",text:"论武不再只论胜负。山风依次问你的流派为何保护、医治、隐藏、演奏、契灵、浴血、断潮、造器、渡人、承认明暗或出剑。无门客把所有答案拼成无隙一式；它能克制招式，却无法理解有人为何主动不赢。",boss:true,options:["迎战天下同招，并在胜机前收手","用流派核心去保护台下受波及者","当众拆解自己最得意的一式"]},
+    {title:"天下同招",place:"青崖最高阶",text:"十一门愿意停战，却都要求保留最核心的秘密；无门追随者要求立刻公开全部武学；普通人只想学一招不被山贼欺负。你无法同时保住门派权威、武学多样与绝对开放。",options:[]}
+  ],endings:[
+    {name:"一脉宗师",title:"改门立脉人",desc:"你继承并改革本门，把每招的来源与责任写进谱中。门下仍有秘密，却不再以出身决定谁能入门。",hint:"完全公开基础武学会让门派更快衰落。"},
+    {name:"无门天下",title:"百姓授招人",desc:"你公开大量基础武学，让普通人也能自保。盗匪同样学会了这些招式，江湖因此更公平，也更危险。",hint:"若只公开求生招而保留杀招，世界会得到另一种平衡。"},
+    {name:"武尽归凡",title:"拆谱还乡客",desc:"你拆解绝学，把动作重新交还老兵、医者、船工与更夫。武林失去一批传奇，许多村镇却第一次有了自己的拳脚先生。",hint:"二周目中，消失的绝学会被暗市重新拼合。"}
+  ]},
+  identity:{name:"无名暗市",tendency:"寻名",entry:"核对追兵腰牌上一个死人的姓名",question:"所有记录都是假的时，谁有资格认定一个人是谁？",boss:"nameCollector",rumors:["暗市开始拍卖与你同名的完整人生。","十七发现自己只是同一件兵器的第十七次记录。","无面宴开席，数千人的真名与假名即将被焚。"],acts:[
+    {title:"有人买走你的名字",place:"汴京无名暗市",text:"拍卖台上有你的假户籍、死亡文书、投诚信，以及一个拥有完整亲友和记忆证据的“你”。买回名字要交出另一人的真籍；不买，明日官府便会认定你已经死了。十七在帘后掷出一枚第十八面骨骰。",options:["先问另一个你是否自愿使用此名","买下自己的死亡文书，不买他的人生","公开两套证据，让旧识各自辨认"]},
+    {title:"死籍生人",place:"暗市死籍巷",text:"穷人卖掉清白户籍换一笔活命钱，权贵用它逃罪；许多证人也靠假死身份躲过追杀。摧毁死籍能揭露罪人，也会让数千逃亡者失去合法存在。无面先生说，名字本就是一项别人承认才有效的契约。",options:["保留新身份，冻结权贵购买记录","让本人决定是否公开旧籍","只公布交易者罪证，不公布受害者去向"]},
+    {title:"第十七次训练",place:"骨骰庄",text:"十七并非第十七个孩子，“十七”是同一件兵器的第十七次训练记录。她身上的部分记忆来自前十六次失败。你不能用一句“真假不重要”带过，因为那些痛苦构成她全部人生。她问你：若记忆不是我的，伤口是谁的？",options:["承认无法替她定义，只陪她查完","寻找历代十七仍活着的人","毁掉训练册前先让她读完自己的记录"]},
+    {title:"万人无面宴",place:"无名暗市·面具厅",text:"所有人戴着别人的脸交易。你可买回姓名、替NPC买一份死亡、把恶人罪名转给另一个恶人。无面先生启动焚册机关：出生记录、交易记录、新身份，只来得及保住一类。",boss:true,options:["闯入焚册房阻止机关","让十七用尚未存在的名字穿过死籍锁","与无面先生谈一套由本人撤回的身份契约"]},
+    {title:"焚册房",place:"暗市最深处",text:"火舌已舔上三排册页。保住出生记录能揭露权贵，却暴露逃亡者；保住交易记录能审判买卖，却不能证明受害者原本是谁；保住新身份可以保护活人，让过去永远难追。十七没有要你替她取名。",options:[]}
+  ],endings:[
+    {name:"人间有名",title:"自名见证人",desc:"你建立由本人决定是否公开旧身份、并可撤回许可的新册。它无法让所有人满意，却第一次让名字的主人拥有发言权。",hint:"保留完整交易记录会更利于审判，也更危险。"},
+    {name:"第一个名字",title:"名外同行者",desc:"十七亲手为自己取了第一个名字。你没有替她决定，只在新册第一行签作见证。江湖后来仍叫她十七，她已不再只剩这个编号。",hint:"若接管暗市，你或许能保护更多假身份者。"},
+    {name:"万人皆假",title:"百面执册人",desc:"你保留并接管身份交易，用假名改动朝局。许多人因此重获人生，也再没人能确定现在的你是否仍是最初那个人。",hint:"二周目会出现一位声称继承你全部关系的旧名者。"}
+  ]},
+  message:{name:"知北游万里",tendency:"传信",entry:"拆看三名追兵收到的同一封假信",question:"传播消息的人，是否要为听信以后发生的事负责？",boss:"stationFire",rumors:["三封内容都真的急信把知北游人手调离驿站。","七地把同一句谣言传成七场不同冲突。","十二驿同夜起火，江听渡失去消息。"],acts:[
+    {title:"真假三封信",place:"知北游州桥驿",text:"汴河劫船、雁门兵变、镜湖沉尸三封急信都是真的，时间与落款却全假。你只能亲赴一处，另外两处交给帮会同伴。那些人可能成功、失踪或背叛；你没选的消息不会停在纸上等你。",options:["亲赴最可能立刻死人的汴河","去雁门查会引发战争的兵变","把镜湖交给同伴，先拆三封信的纸筋"]},
+    {title:"七地一谣",place:"七地驿道",text:"“照夜出，旧朝亡”在汴京是谋逆，在雁门是洗耻，在镜湖是起事，在乡村却成了死人复生。纠正某地版本可阻止冲突，也可能摧毁人们唯一的希望。叶双白问：真相若来得太迟，还算救人么？",options:["逐地标注来源，不删除当地解释","先纠正会立刻引发杀戮的版本","保留谣言，却公开谁从中获利"]},
+    {title:"驿站从不中立",place:"知北游掌卷房",text:"十二驿主每天决定哪封信先送、哪条消息卖给官府、哪个名字删去。江听渡用缓信制度压下可能引战的真情报，救过村庄，也让冤案错过翻案。他把密钥交给你：“速度也是立场，沉默更是。”",options:["建立紧急消息的多驿共同裁决","允许缓信，但必须记录延迟者与代价","把被压下的旧信交还收件人自行决定"]},
+    {title:"十二驿失火",place:"天下十二驿",text:"官军烧一站、商会买一站、边军扣信使、照骨楼换密封、百晓楼散布背叛传闻。没有唯一敌人。你只能优先保住信使、密信、驿站、百姓信任或江听渡的秘密卷宗。",boss:true,options:["闯火路救信使，与同夜之火交锋","放弃中央卷宗，让各驿自行署名广播","公开知北游删改记录，先挽回百姓信任"]},
+    {title:"万里一封信",place:"州桥总驿钟楼",text:"你得到一次向所有驿站同时发出同一句话的机会。无论内容多善意，这都像另一座照夜机枢，让天下只听见一个答案。你也可以拒绝统一消息，让各地承担自己的判断与错误。",options:[]}
+  ],endings:[
+    {name:"知北游主",title:"万里掌卷人",desc:"你成为新游主，规定每封消息注明来源、改动与可能代价。网络仍会犯错，但再不能假装自己只是中立的路。",hint:"解散中央掌卷能防止独占，也会增加假消息。"},
+    {name:"众声江湖",title:"十二驿共听者",desc:"你放弃总驿统一广播，让各地驿站独立记录、相互纠错。假消息增加了，却再无人能同时控制天下的耳朵。",hint:"若用一封假信止战，会得到更快也更脆弱的和平。"},
+    {name:"万里说书人",title:"不掌卷的旅客",desc:"你拒绝掌权，带着真实、夸张和仍未核实的故事继续走。每到一地，你先说消息从何而来，再说自己也可能错。",hint:"二周目里，一封以你口吻写成的假信将先你一步抵达。"}
+  ]}
+};
+const ROUTE_REWARDS={
+  truth:"eq_route_truth",law:"eq_route_law",border:"eq_route_border",trade:"eq_route_trade",plague:"eq_route_plague",ranking:"eq_route_ranking",martial:"eq_route_martial",identity:"eq_route_identity",message:"eq_route_message"
+};
+[
+  ["truth","众证半铃","护符","神兵",{insight:18,luck:9},"每次公开证据时记录一条异议；三条异议会使下一次心境检定更稳。"],
+  ["law","无印灯冠","头部","百炼",{defense:16,hit:10},"观察后若选择交涉，敌人的第一项程序性抗性失效。"],
+  ["border","雪线共碑枪","武器","神兵",{attack:21,hpMax:35},"保护平民或敌方伤兵会积一层碑名，满三层令下一次突进附带护盾。"],
+  ["trade","万舟分契带","腰带","百炼",{wealth:80,defense:12},"出售装备时少得一成钱，却把差额记为义渡信用，副本结算可换材料。"],
+  ["plague","千灯药囊","护符","神兵",{healing:22,mpMax:24},"同一战内对不同目标治疗会逐次增强；只治疗自己则不会触发。"],
+  ["ranking","无榜照影衣","上衣","百炼",{agility:15,crit:11},"声望越低，首轮隐匿越强；登上高榜后转为提高交涉。"],
+  ["martial","百家第一式","武器","神兵",{attack:19,insight:13},"可复制上一场敌人使用的一项基础招，但绝不会复制绝学。"],
+  ["identity","未署名戒","戒指","神兵",{luck:15,agility:12},"每章可让一次身份检定改用你亲自选择的新名，代价是旧关系暂时认不出你。"],
+  ["message","十二驿风牌","项链","百炼",{hit:13,reputation:10},"江湖风闻每推进两次，为你揭示一个未处理路线的真实代价。"]
+].forEach(x=>EQUIPMENT_DB[`eq_route_${x[0]}`]={id:`eq_route_${x[0]}`,name:x[1],slot:x[2],quality:x[3],levelReq:7,realmReq:0,base:x[4],set:null,desc:x[5],source:`${ROUTES[x[0]].name}路线结局`,hook:{id:`route_${x[0]}`,name:"路线回响",desc:x[5]}});
+
+Object.entries(ROUTES).forEach(([rid,route])=>{
+  ACHIEVEMENTS.push({id:`route_${rid}`,name:`走完·${route.name}`,category:"剧情",desc:`完成${route.name}的一种结局。`,hidden:false,index:ACHIEVEMENTS.length});
+  route.endings.forEach((e,i)=>ENDINGS[`route_${rid}_${i}`]={name:e.name,title:e.title,desc:e.desc,hint:e.hint});
+  route.acts.forEach((act,ai)=>{
+    const final=ai===route.acts.length-1;
+    STORY[`route_${rid}_${ai}`]={chapter:`主线 · ${route.name} · 第${["一","二","三","四","五"][ai]}幕`,place:act.place,title:act.title,text:act.text,options:final
+      ?route.endings.map((e,ei)=>({label:["把决定交给众人共同承担","选择能保住眼前之人的方案","亲自掌握力量与后果"][ei],action:"routeEnding",ending:`route_${rid}_${ei}`,effects:{routeProgress:{id:rid,stage:5},equipment:ROUTE_REWARDS[rid],world:{[`final_${rid}`]:ei}}}))
+      :act.options.map((label,oi)=>({label,next:`route_${rid}_${ai+1}`,action:act.boss&&oi===0?"battle":undefined,enemy:act.boss&&oi===0?route.boss:undefined,className:act.boss&&oi===0?"combat":"",effects:{tendency:{[rid]:1},routeProgress:{id:rid,stage:ai+1},advanceWorld:rid,stats:{xp:130+ai*45,cultivation:60+ai*25},items:ai===1||ai===3?{page:1}:undefined,personality:{[["benevolence","scheme","freedom"][oi]]:1},world:{[`decision_${rid}_${ai}`]:oi}}}))};
+  });
+});
+
+STORY.p2.text="追兵退去，林鹊掰开木匣。烧焦星图、半枚铜铃、无名押运单与一块随情绪发热的黑玉挤在一起；追兵身上又搜出空白供状、百晓楼榜号、死人的腰牌和三封同文假信。\n\n这些并非菜单上的九条路，而是九件都在今夜催命的事。你先碰哪一件，哪一群人便会先把你视作关键。其他事不会停下来等你。";
+STORY.p2.onEnter={achievement:"prologue",quest:{id:"main",name:"九事同夜",stage:"沿一件具体线索行动，让道路由选择自然形成"},stats:{xp:50,cultivation:30},items:{smallPill:2,page:1}};
+STORY.p2.options=[
+  {label:"拾起空白供状，去大理寺找第八间牢房",next:"route_law_0",effects:{routeSeed:"law",tendency:{law:1},relation:{guLin:{favor:2,trust:1}}}},
+  {label:"追红线药香，赶往城南封锁疫坊",next:"route_plague_0",effects:{routeSeed:"plague",tendency:{plague:1},relation:{wenJiu:{trust:2}}}},
+  {label:"认出木匣沉船木，连夜下镜湖",next:"route_trade_0",effects:{routeSeed:"trade",tendency:{trade:1},relation:{suYuan:{trust:2}}}},
+  {label:"核对死人腰牌，进入无名暗市",next:"route_identity_0",effects:{routeSeed:"identity",tendency:{identity:1},relation:{seventeen:{trust:1}}}},
+  {label:"把余下证物铺在灯下继续分辨",next:"route_clue_table",effects:{stats:{insight:1}}}
+];
+STORY.route_clue_table={chapter:"序章 · 九事同夜",place:"州桥废灯摊",title:"灯下还有五条路",text:"灯油只剩薄薄一层。第八支旧箭带着北地冻土，追兵脚步藏着十一门共同的起式，榜号在水汽里显出你的名字，三封假信的纸筋来自知北游十二驿；黑玉则映出一段无人愿承认的旧记忆。\n\n你伸手时，远处已有一处钟声先停了。",options:[
+  {label:"带旧箭赶往雁门",next:"route_border_0",effects:{routeSeed:"border",tendency:{border:1},relation:{xiaoYanzhen:{trust:2}}}},
+  {label:"循基础步法查第十二张拜帖",next:"route_martial_0",effects:{routeSeed:"martial",tendency:{martial:1},relation:{muHanshan:{trust:2}}}},
+  {label:"拿榜号去找柠檬茶少甜",next:"route_ranking_0",effects:{routeSeed:"ranking",tendency:{ranking:1},relation:{baizhiyuan:{trust:1}}}},
+  {label:"拆三封假信，追查知北游空驿",next:"route_message_0",effects:{routeSeed:"message",tendency:{message:1},relation:{yeShuang:{trust:2}}}},
+  {label:"让黑玉显出十七年前的第一幕",next:"route_truth_0",effects:{routeSeed:"truth",tendency:{truth:1},relation:{linQue:{favor:2,trust:2}}}}
+]};
+
 STORY.c1_0.options.forEach((o,i)=>o.next=["echo_ticket","echo_medicine","echo_witness","echo_official"][i]);
 STORY.c1_after.options.forEach(o=>{if(o.next==="c2_0")o.next="gamble_tiance_1"});
 STORY.c2_after.options.forEach(o=>{if(o.next==="c3_0")o.next="gamble_cup_1"});
@@ -865,6 +1058,10 @@ STORY.c3_after.options.forEach(o=>{if(o.next==="c4_0")o.next="gamble_seventeen_1
 function defaultRelations(){
   const out={}; Object.entries(NPCS).forEach(([id,n])=>out[id]={favor:0,trust:0,stance:n.stance,status:"未相识"}); return out;
 }
+function defaultRouteState(){
+  const tendencies={},progress={},urgency={};Object.keys(ROUTES).forEach(id=>{tendencies[id]=0;progress[id]=0;urgency[id]=0});
+  return {tendencies,progress,urgency,seeds:[],primary:null,secondary:null,switchUsed:false,turn:0,rumors:[],completed:[]};
+}
 function blankGear(){const g={};SLOTS.forEach(s=>g[s]=null);return g}
 function defaultSkillState(schoolId="tieyi"){
   const list=SCHOOLS[schoolId]?.skills||[];
@@ -872,15 +1069,15 @@ function defaultSkillState(schoolId="tieyi"){
 }
 function freshState(seed={}){
   const baseStats={hpMax:115,hp:115,mpMax:70,mp:70,attack:16,defense:9,agility:9,crit:7,hit:88,break:4,healing:4,luck:6,insight:7,reputation:0,chivalry:0,notoriety:0,wealth:80,energyMax:100,energy:100,xp:0,cultivation:0};
-  return {version:VERSION,run:seed.run||1,startedAt:Date.now(),playSeconds:0,node:"p0",player:{name:"",gender:"",look:"",title:"",origin:"",school:"",level:1,realm:0,stats:baseStats,permanentWound:0},
+  return {version:VERSION,run:seed.run||1,startedAt:Date.now(),playSeconds:0,node:"p0",player:{name:"",gender:"",look:"",title:"",origin:"",school:"",obsession:"",secret:"",keepsake:"",level:1,realm:0,stats:baseStats,permanentWound:0},
     personality:{benevolence:0,scheme:0,freedom:0,obsession:0},inventory:{equipment:[],items:{smallPill:2,spiritTea:1},capacity:24,warehouse:[]},gear:blankGear(),
-    relations:defaultRelations(),skills:defaultSkillState(),quests:{main:{name:"尚未启程",stage:"完成角色创建",status:"进行中"}},world:{entered:{},regions:["汴京"],factions:{court:0,merchant:0,folk:0,jianghu:0},weather:"雨夜",time:"三更",currentDungeon:null,fullTruth:false,gamblers:{tianCe:{oath:0,debt:0},cupWine:{oath:0,debt:0},seventeen:{oath:0,debt:0}}},
+    relations:defaultRelations(),skills:defaultSkillState(),quests:{main:{name:"尚未启程",stage:"完成角色创建",status:"进行中"}},routes:defaultRouteState(),world:{entered:{},regions:["汴京"],factions:{court:0,merchant:0,folk:0,jianghu:0},weather:"雨夜",time:"三更",currentDungeon:null,fullTruth:false,routeNotice:"",gamblers:{tianCe:{oath:0,debt:0},cupWine:{oath:0,debt:0},seventeen:{oath:0,debt:0}}},
     fort:{unlocked:false,level:0,herbs:0,visitors:[],rooms:[],beastCare:0,dispatches:0},dungeons:{},achievements:[],endings:[],history:[],adventures:[],battleWins:0,flees:0,heals:0,itemsFound:0,failures:0,
     settings:{font:16,reduceMotion:false,sound:false,randomEncounters:true},battle:null,lastNode:"p0",lastChanges:[],ngMemory:seed.ngMemory||0,inheritTalent:seed.inheritTalent||null};
 }
-let state=null, creatorData={step:1,origin:null,school:null}, meta=loadMeta(), playTimer=null;
+let state=null, creatorData={step:1,origin:null,school:null,keepsake:null}, meta=loadMeta(), playTimer=null;
 function loadMeta(){
-  try{return Object.assign({achievements:[],endings:[],runs:0,collection:[],memory:0},JSON.parse(localStorage.getItem(META_KEY)||"{}"))}catch(e){return {achievements:[],endings:[],runs:0,collection:[],memory:0}}
+  try{return Object.assign({achievements:[],endings:[],routes:[],runs:0,collection:[],memory:0},JSON.parse(localStorage.getItem(META_KEY)||"{}"))}catch(e){return {achievements:[],endings:[],routes:[],runs:0,collection:[],memory:0}}
 }
 function saveMeta(){try{localStorage.setItem(META_KEY,JSON.stringify(meta))}catch(e){}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
@@ -901,7 +1098,7 @@ function makeEquipment(id){
   const base=EQUIPMENT_DB[id]; if(!base)return null;
   const affixKeys=["attack","defense","agility","crit","hit","break","healing","luck","insight","hpMax"];
   const q=QUALITIES.indexOf(base.quality), key=affixKeys[rand(0,affixKeys.length-1)];
-  const mechanism=q>=3?deepClone(MECHANIC_AFFIXES[rand(0,MECHANIC_AFFIXES.length-1)]):null;
+  const mechanism=q>=3?deepClone(base.hook||MECHANIC_AFFIXES[rand(0,MECHANIC_AFFIXES.length-1)]):null;
   return {uid:`${id}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,id,enhance:0,durability:100,locked:false,affixes:{[key]:Math.max(1,Math.floor((q+1)*1.4))},mechanism,sockets:[],socketMax:q>=5?2:q>=3?1:0,reforges:0,resonance:0};
 }
 function addEquipment(id){
@@ -932,6 +1129,36 @@ function applyOriginAndSchool(){
   addItem(originMap[state.player.origin],1);
   addEquipment(`eq_0_${["tieyi","suwen","suimeng","shenxiang","jiuling","xuehe","canglan","xuanji","hongyin","chaoguang","longyin"].indexOf(state.player.school)%2}`);
 }
+function evaluateRouteFormation(){
+  const r=state.routes,ranked=Object.keys(ROUTES).sort((a,b)=>r.tendencies[b]-r.tendencies[a]);
+  const lead=ranked[0];if(!r.primary&&r.tendencies[lead]>=3){
+    r.primary=lead;state.world.routeNotice=`江湖所向：${ROUTES[lead].name}中的人开始主动寻找你。`;
+    state.quests.main={name:ROUTES[lead].name,stage:ROUTES[lead].question,status:"进行中"};
+    state.lastChanges.push(`江湖所向 · ${ROUTES[lead].name}`);
+  }else if(r.primary&&lead!==r.primary&&r.tendencies[lead]>=3&&!r.secondary){
+    r.secondary=lead;state.world.routeNotice=`另一条道路也在加深：${ROUTES[lead].name}不会再只是风闻。`;
+    state.lastChanges.push(`深度介入 · ${ROUTES[lead].name}`);
+  }
+}
+function advanceWorld(activeRoute){
+  const r=state.routes;r.turn++;
+  Object.keys(ROUTES).forEach(id=>{
+    if(id===activeRoute)return;
+    const before=r.urgency[id]||0;r.urgency[id]=before+1;
+    const marks=[2,4,6],mi=marks.indexOf(r.urgency[id]);
+    if(mi>=0){
+      const text=ROUTES[id].rumors[Math.min(mi,ROUTES[id].rumors.length-1)];
+      const key=`${id}:${mi}`;if(!r.rumors.some(x=>x.key===key))r.rumors.push({key,route:id,turn:r.turn,text});
+    }
+  });
+  if(r.rumors.length>24)r.rumors=r.rumors.slice(-24);
+}
+function routeReading(){
+  const r=state.routes;if(!r)return"江湖道路尚未成形";
+  if(r.primary)return`江湖所向：${ROUTES[r.primary].name}${r.secondary?`；另有${ROUTES[r.secondary].name}与之交错`:""}`;
+  const top=Object.keys(ROUTES).sort((a,b)=>r.tendencies[b]-r.tendencies[a]).slice(0,2).filter(id=>r.tendencies[id]>0);
+  return top.length?`你更常回应${top.map(id=>ROUTES[id].tendency).join("与")}之事`:"江湖道路尚未成形";
+}
 
 function applyEffects(effects={},source=""){
   state.lastChanges=[];
@@ -947,6 +1174,11 @@ function applyEffects(effects={},source=""){
   if(effects.items)Object.entries(effects.items).forEach(([id,n])=>addItem(id,n));
   if(effects.equipment)addEquipment(effects.equipment);
   if(effects.quest)state.quests[effects.quest.id]={name:effects.quest.name,stage:effects.quest.stage,status:"进行中"};
+  if(effects.routeSeed&&!state.routes.seeds.includes(effects.routeSeed)){state.routes.seeds.push(effects.routeSeed);state.lastChanges.push(`获得线索 · ${ROUTES[effects.routeSeed].name}`)}
+  if(effects.tendency)Object.entries(effects.tendency).forEach(([id,v])=>{if(ROUTES[id])state.routes.tendencies[id]=(state.routes.tendencies[id]||0)+v});
+  if(effects.routeProgress&&ROUTES[effects.routeProgress.id])state.routes.progress[effects.routeProgress.id]=Math.max(state.routes.progress[effects.routeProgress.id]||0,effects.routeProgress.stage||0);
+  if(effects.advanceWorld)advanceWorld(effects.advanceWorld);
+  if(effects.routeSeed||effects.tendency)evaluateRouteFormation();
   if(effects.unlockFort){state.fort.unlocked=true;state.fort.level=Math.max(1,state.fort.level);state.fort.rooms=["药圃"];state.lastChanges.push("福地已解锁")}
   if(effects.achievement)unlockAchievement(effects.achievement);
   if(effects.log)addHistory(effects.log);
@@ -967,7 +1199,8 @@ function grantLevelGrowth(oldLevel,newLevel){
 function selectOpening(){
   const own=OPENING_IDS.find(id=>OPENING_DEFS[id].origin===state.player.origin);
   const wandering=OPENING_IDS.filter(id=>!OPENING_DEFS[id].origin);
-  const pool=state.run>1?[own,"op_dream",...wandering]:[own,...wandering];
+  const themed={rainLetter:"op_zhibeiyou",namelessArrow:"op_soldier",halfBell:"op_orphan",medicineBowl:"op_healer",boneChip:state.run>1?"op_dream":"op_funeral"}[state.player.keepsake];
+  const pool=state.run>1?[own,themed,"op_dream",...wandering]:[own,themed,...wandering];
   return pool[rand(0,pool.length-1)]||own||"p0";
 }
 function personalityReading(){
@@ -1031,6 +1264,7 @@ function chooseOption(index){
   if(opt.action==="battle"){startBattle(opt.enemy,opt.next);return}
   if(opt.action==="open"){openPanel(opt.panel);if(opt.next)state.world.pendingNode=opt.next;return}
   if(opt.action==="ending"){resolveEnding(opt.direction);return}
+  if(opt.action==="routeEnding"){endGame(opt.ending);return}
   if(opt.action==="returnSide"){const back=state.world.sideReturn||state.lastNode||"p0";delete state.world.sideReturn;enterNode(STORY[back]?back:"p0");return}
   enterNode(opt.next);
 }
@@ -1043,7 +1277,10 @@ function render(){
   const node=STORY[state.node]||STORY.p0;
   document.getElementById("chapterKicker").textContent=node.chapter;
   document.getElementById("sceneTitle").textContent=node.title;
-  document.getElementById("storyText").innerHTML=resolveText(node.text).split("\n").map((p,i)=>i===1?`<span class="dialogue">${esc(p)}</span>`:esc(p)).join("\n");
+  const news=(state.routes?.rumors||[]).slice(-2),notice=state.world.routeNotice||"";
+  document.getElementById("storyText").innerHTML=resolveText(node.text).split("\n").map((p,i)=>i===1?`<span class="dialogue">${esc(p)}</span>`:esc(p)).join("\n")+
+    ((notice||news.length)?`<div class="world-news"><b>江湖风闻与回响</b>${notice?`<p>${esc(notice)}</p>`:""}${news.map(x=>`<p>· ${esc(x.text)}</p>`).join("")}</div>`:"");
+  state.world.routeNotice="";
   const del=document.getElementById("deltaLog");del.innerHTML=(state.lastChanges||[]).slice(-6).map(x=>`<span class="delta ${/[+-]-| -/.test(x)?"bad":"good"}">${esc(x)}</span>`).join("");
   document.getElementById("choices").innerHTML=node.options.map((o,i)=>{
     const c=conditionResult(o.condition), cls=[o.className||"",o.hidden?"hidden-choice":"",!c.ok?"locked":""].join(" ");
@@ -1360,7 +1597,11 @@ function resolveEnding(direction){
   endGame(id);
 }
 function endGame(id){
-  const e=ENDINGS[id]||ENDINGS.death;state.currentEnding=id;if(!state.endings.includes(id))state.endings.push(id);if(!meta.endings.includes(id))meta.endings.push(id);meta.runs=Math.max(meta.runs,state.run);meta.memory=Math.max(meta.memory,state.run);saveMeta();
+  const e=ENDINGS[id]||ENDINGS.death;state.currentEnding=id;if(!state.endings.includes(id))state.endings.push(id);if(!meta.endings.includes(id))meta.endings.push(id);
+  const routeMatch=id.match(/^route_([^_]+)_/);if(routeMatch&&ROUTES[routeMatch[1]]){
+    const rid=routeMatch[1];if(!state.routes.completed.includes(rid))state.routes.completed.push(rid);if(!meta.routes.includes(rid))meta.routes.push(rid);unlockAchievement(`route_${rid}`);
+  }
+  meta.runs=Math.max(meta.runs,state.run);meta.memory=Math.max(meta.memory,state.run);saveMeta();
   if(id==="dawn")unlockAchievement("fateBreaker");if(id==="guardian"&&Object.values(state.gear).some(x=>x&&EQUIPMENT_DB[x.id].quality==="神兵"))unlockAchievement("nightBlade");
   const trusted=Object.entries(state.relations).sort((a,b)=>b[1].trust-a[1].trust).slice(0,4);
   document.getElementById("battleArea").classList.add("hidden");document.getElementById("sceneArea").classList.remove("hidden");
@@ -1368,7 +1609,7 @@ function endGame(id){
     <div class="ending-block"><b>关键人物命运</b>${trusted.map(([nid,rv],i)=>`<p>${esc(NPCS[nid].name)}：${esc(rv.trust>=25?NPCS[nid].fates[0]:NPCS[nid].fates[1])}</p>`).join("")}</div>
     <div class="ending-block"><b>江湖评价</b><p>${esc(personalityReading())}；侠义 ${state.player.stats.chivalry}，恶名 ${state.player.stats.notoriety}，境界 ${REALMS[state.player.realm]}。</p></div>
     <div class="ending-block"><b>重要选择回顾</b>${state.history.slice(-5).map(h=>`<p>· ${esc(h.text)}</p>`).join("")}</div>
-    <div class="ending-block"><b>本周目统计</b><p>战斗胜利 ${state.battleWins} · 副本通关 ${Object.values(state.dungeons).reduce((n,x)=>n+x.clears,0)} · 成就 ${state.achievements.length} · 奇遇 ${state.adventures.length}</p><p>未探索提示：${esc(e.hint)}</p></div>
+    <div class="ending-block"><b>本周目统计</b><p>${esc(routeReading())} · 战斗胜利 ${state.battleWins} · 副本通关 ${Object.values(state.dungeons).reduce((n,x)=>n+x.clears,0)} · 成就 ${state.achievements.length} · 奇遇 ${state.adventures.length}</p><p>未探索提示：${esc(e.hint)}</p></div>
     <div class="ending-actions"><button class="btn primary" id="ngPlusBtn">开启${state.run>=2?"下一":"二"}周目</button><button class="btn" id="summaryBtn">复制本次冒险摘要</button><button class="btn danger" id="freshBtn">全新开始</button></div></section>`;
   document.getElementById("ngPlusBtn").onclick=startNewGamePlus;document.getElementById("summaryBtn").onclick=copySummary;document.getElementById("freshBtn").onclick=()=>showCreator(true);
   autoSave();
@@ -1378,7 +1619,7 @@ function startNewGamePlus(){
   state.player={...old.player,level:1,realm:0,stats:{...state.player.stats,wealth:160,luck:state.player.stats.luck+2}};
   state.settings=old.settings;state.achievements=[...new Set(meta.achievements)];state.endings=[...new Set(meta.endings)];
   addItem("page",2);if(meta.endings.length>=3)addEquipment("eq_8_4");
-  applyOriginAndSchool();state.world.ngPlus=true;state.world.memoryFragments=1;state.history=[];const opening=selectOpening();state.world.openingId=opening;enterNode(opening);toast("旧梦重来：新的异途开篇已出现，部分记忆、收藏与天赋已继承。","good");
+  applyOriginAndSchool();if(KEEPSAKES[state.player.keepsake]){const k=KEEPSAKES[state.player.keepsake];addItem(k.item,1);state.routes.tendencies[k.tendency]=1}state.world.ngPlus=true;state.world.memoryFragments=1;state.history=[];const opening=selectOpening();state.world.openingId=opening;enterNode(opening);toast("旧梦重来：新的异途开篇已出现，部分记忆、收藏与天赋已继承。","good");
 }
 
 function openPanel(name){
@@ -1390,7 +1631,7 @@ function showModal(title,html){document.getElementById("modalTitle").textContent
 function closeModal(){document.getElementById("modalWrap").classList.add("hidden");if(state?.world.pendingNode){const n=state.world.pendingNode;delete state.world.pendingNode;enterNode(n)}}
 function renderCharacter(){
   const t=totalStats(),s=state.player.stats,need=realmNeed();
-  showModal("角色",`<div class="list-card"><h3>${esc(state.player.name)} · ${esc(state.player.title)}</h3><p>${esc(state.player.gender)} · ${esc(state.player.look)}<br>${esc(ORIGINS[state.player.origin].name)} · ${esc(SCHOOLS[state.player.school].name)}</p><span class="tag">${esc(personalityReading())}</span></div>
+  showModal("角色",`<div class="list-card"><h3>${esc(state.player.name)} · ${esc(state.player.title)}</h3><p>${esc(state.player.gender)} · ${esc(state.player.look)}<br>${esc(ORIGINS[state.player.origin].name)} · ${esc(SCHOOLS[state.player.school].name)}<br>旧物：${esc(KEEPSAKES[state.player.keepsake]?.name||"未留旧物")}</p><p>执念：${esc(state.player.obsession||"尚未写下")}<br>秘密：${esc(state.player.secret||"只有你自己知道")}</p><span class="tag">${esc(personalityReading())}</span><span class="tag">${esc(routeReading())}</span></div>
   <h3 class="section-title">属性</h3><div class="panel-grid">${["hpMax","mpMax","attack","defense","agility","crit","hit","break","healing","luck","insight","reputation","chivalry","notoriety","wealth","energy"].map(k=>`<div class="stat-card"><span>${statName(k)}</span><b>${Math.round(k==="energy"?s.energy:t[k]||s[k]||0)}</b></div>`).join("")}</div>
   <h3 class="section-title">境界 · ${REALMS[state.player.realm]}</h3><p>下一境界需要：等级 ${need.level}、修为 ${need.cultivation}、残页 ${need.pages}、悟性 ${need.insight}。</p><div class="progress-line"><i style="width:${clamp(s.cultivation/need.cultivation*100,0,100)}%"></i></div>
   <button class="btn primary" id="breakRealm" ${state.player.realm>=6?"disabled":""}>进入心境试炼</button>`);
@@ -1530,11 +1771,13 @@ function openSchoolEvent(){
 }
 function renderQuests(tab="主线任务"){
   const categories=["主线任务","支线任务","奇遇任务","门派任务","身份任务","福地任务","伙伴任务","悬赏任务","江湖传闻"];
-  const main=Object.values(state.quests).map(q=>`<div class="list-card"><h3>${esc(q.name)}</h3><p>${esc(q.stage)}</p><span class="tag">${q.status}</span></div>`).join("");
+  const routeCards=Object.entries(ROUTES).filter(([id])=>state.routes.seeds.includes(id)||state.routes.progress[id]>0||state.routes.urgency[id]>=2).map(([id,r])=>`<div class="list-card route-card ${state.routes.primary===id?"active":""}"><h3>${esc(r.name)}</h3><p>${esc(r.question)}</p><div class="meta-line"><span class="tag">${state.routes.primary===id?"江湖所向":state.routes.secondary===id?"深度交错":state.routes.progress[id]>0?"已介入":"自行发展"}</span><span class="tag">推进 ${state.routes.progress[id]||0}/5</span></div></div>`).join("");
+  const main=Object.values(state.quests).map(q=>`<div class="list-card"><h3>${esc(q.name)}</h3><p>${esc(q.stage)}</p><span class="tag">${q.status}</span></div>`).join("")+routeCards;
   const dList=Object.entries(DUNGEONS).map(([id,d])=>`<div class="list-card"><h3>${d.name}</h3><p>${d.desc}</p><button class="btn small" data-dungeon="${id}">进入副本</button></div>`).join("");
   const adv=ADVENTURES.map(a=>`<div class="list-card"><h3>${state.adventures.includes(a.id)?a.name:"未解奇遇"}</h3><p>${state.adventures.includes(a.id)?a.desc:`线索：${a.place} · ${a.time} · ${a.condition}`}</p></div>`).join("");
   const side=Object.entries(SIDE_QUESTS).filter(([,q])=>q.category===tab).map(([id,q])=>{const available=q.need(),done=q.done();return`<div class="list-card"><h3>${esc(q.name)}</h3><p>${esc(q.desc)}</p><span class="tag">${done?"已完成":available?"可追踪":"尚无线索"}</span>${available&&!done?`<button class="btn small" data-sidequest="${id}">追踪此事</button>`:""}</div>`}).join("");
-  const rumors=Object.values(SIDE_QUESTS).map(q=>`<div class="list-card"><h3>${q.done()?"传闻已有结局":q.need()?"新传闻":"未明传闻"} · ${esc(q.name)}</h3><p>${esc(q.need()?q.desc:"它会在等级、关系或福地发生变化后出现。")}</p></div>`).join("");
+  const worldRumors=(state.routes.rumors||[]).slice().reverse().map(x=>`<div class="list-card"><h3>${esc(ROUTES[x.route].name)} · 世界仍在走</h3><p>${esc(x.text)}</p><span class="tag">第 ${x.turn} 次时序推进</span></div>`).join("");
+  const rumors=worldRumors+Object.values(SIDE_QUESTS).map(q=>`<div class="list-card"><h3>${q.done()?"传闻已有结局":q.need()?"新传闻":"未明传闻"} · ${esc(q.name)}</h3><p>${esc(q.need()?q.desc:"它会在等级、关系或福地发生变化后出现。")}</p></div>`).join("");
   const content=tab==="主线任务"?main:tab==="悬赏任务"?dList:tab==="奇遇任务"?adv:tab==="江湖传闻"?rumors:side||`<div class="empty">新的${tab.replace("任务","")}故事会随选择、关系与天气出现。</div>`;
   showModal("任务与传闻",`<div class="tabs">${categories.map(x=>`<button class="tab ${x===tab?"active":""}" data-qtab="${x}">${x}</button>`).join("")}</div><div class="list">${content}</div>`);
   document.querySelectorAll("[data-qtab]").forEach(b=>b.onclick=()=>renderQuests(b.dataset.qtab));document.querySelectorAll("[data-dungeon]").forEach(b=>b.onclick=()=>openDungeon(b.dataset.dungeon));document.querySelectorAll("[data-sidequest]").forEach(b=>b.onclick=()=>beginSideQuest(b.dataset.sidequest));
@@ -1604,7 +1847,7 @@ function renderSettings(){
   document.getElementById("restartGame").onclick=()=>{if(confirm("确定放弃当前周目并重新创建角色？已解锁成就与结局会保留。"))showCreator(true)};
 }
 function openArchive(){
-  const ends=Object.entries(ENDINGS);showModal("江湖图鉴",`<p>已解锁结局 ${meta.endings.length}/${ends.length} · 成就 ${meta.achievements.length}/${ACHIEVEMENTS.length} · 完成周目 ${meta.runs}</p><h3 class="section-title">结局图鉴</h3><div class="list">${ends.map(([id,e])=>{const got=meta.endings.includes(id);return`<div class="list-card"><h3>${got?esc(e.name):"未题名的结局"}</h3><p>${got?esc(e.desc):esc(e.hint)}</p></div>`}).join("")}</div>`)
+  const ends=Object.entries(ENDINGS);showModal("江湖图鉴",`<p>已解锁结局 ${meta.endings.length}/${ends.length} · 完整路线 ${(meta.routes||[]).length}/9 · 成就 ${meta.achievements.length}/${ACHIEVEMENTS.length} · 完成周目 ${meta.runs}</p><h3 class="section-title">结局图鉴</h3><div class="list">${ends.map(([id,e])=>{const got=meta.endings.includes(id);return`<div class="list-card"><h3>${got?esc(e.name):"未题名的结局"}</h3><p>${got?esc(e.desc):esc(e.hint)}</p></div>`}).join("")}</div>`)
 }
 function applySettings(){
   const st=state?.settings||{font:16,reduceMotion:false};document.documentElement.style.setProperty("--fs",`${st.font}px`);document.body.classList.toggle("reduce-motion",!!st.reduceMotion)
@@ -1621,12 +1864,14 @@ function reviveState(data){
   data=deepClone(data);
   const fresh=freshState(),school=data.player.school||"tieyi";state=Object.assign(fresh,data);state.version=VERSION;state.player=Object.assign(fresh.player,data.player);state.player.stats=Object.assign(fresh.player.stats,data.player.stats||{});state.settings=Object.assign(fresh.settings,data.settings||{});
   state.relations=Object.assign(defaultRelations(),data.relations||{});state.gear=Object.assign(blankGear(),data.gear||{});state.fort=Object.assign(fresh.fort,data.fort||{});state.world=Object.assign(fresh.world,data.world||{});state.world.entered=state.world.entered||{};state.world.gamblers=Object.assign(fresh.world.gamblers,data.world.gamblers||{});
+  state.routes=Object.assign(defaultRouteState(),data.routes||{});state.routes.tendencies=Object.assign(defaultRouteState().tendencies,data.routes?.tendencies||{});state.routes.progress=Object.assign(defaultRouteState().progress,data.routes?.progress||{});state.routes.urgency=Object.assign(defaultRouteState().urgency,data.routes?.urgency||{});state.routes.seeds=state.routes.seeds||[];state.routes.rumors=state.routes.rumors||[];state.routes.completed=state.routes.completed||[];
   state.skills=Object.assign(defaultSkillState(school),data.skills||{});state.skills.mastery=Object.assign({},data.skills?.mastery||{});state.skills.meridians=Object.assign({ren:0,du:0,chong:0},data.skills?.meridians||{});
   const valid=new Set(SCHOOLS[school]?.skills.map(x=>x.id)||[]);state.skills.learned=(state.skills.learned||[]).filter(x=>valid.has(x));state.skills.equipped=(state.skills.equipped||[]).filter(x=>valid.has(x)).slice(0,4);
   if(!state.skills.learned.length){const d=defaultSkillState(school);state.skills.learned=d.learned;state.skills.equipped=d.equipped}
   const normalizeEq=eq=>{if(!eq)return eq;eq.durability=eq.durability??100;eq.affixes=eq.affixes||{};eq.sockets=eq.sockets||[];eq.socketMax=eq.socketMax??(QUALITIES.indexOf(EQUIPMENT_DB[eq.id]?.quality)>=5?2:QUALITIES.indexOf(EQUIPMENT_DB[eq.id]?.quality)>=3?1:0);eq.reforges=eq.reforges||0;eq.resonance=eq.resonance||0;return eq};
   state.inventory.equipment=(state.inventory.equipment||[]).map(normalizeEq);state.inventory.warehouse=(state.inventory.warehouse||[]).map(normalizeEq);Object.keys(state.gear).forEach(k=>state.gear[k]=normalizeEq(state.gear[k]));
   if(data.version<2){state.battle=null;state.lastChanges=["旧存档已迁移至江湖纪元 V2","武学系统已重整，获得补偿武学点 ×3"];state.skills.points+=3;state.world.migratedFromV1=true}
+  if(data.version<3){state.lastChanges=["旧存档已迁移至江湖纪元 V3","九条主线与动态世界已补齐，获得补偿武学点 ×2"];state.skills.points+=2;state.world.migratedFromV2=true;state.player.obsession=state.player.obsession||"找出旧案中被抹去的名字";state.player.secret=state.player.secret||"曾把一条重要线索藏在心里"}
   return state;
 }
 function loadAuto(){try{reviveState(JSON.parse(localStorage.getItem(SAVE_KEY)));showGame();toast("已读取自动存档。","good")}catch(e){toast("没有可读取的自动存档。","bad")}}
@@ -1635,36 +1880,39 @@ function manualLoad(slot){try{reviveState(JSON.parse(localStorage.getItem(SLOT_P
 function encodeSave(data){return btoa(unescape(encodeURIComponent(JSON.stringify(data))))}
 function decodeSave(text){return JSON.parse(decodeURIComponent(escape(atob(text.trim()))))}
 function exportSave(){const text=encodeSave({kind:"汴河夜雨存档",version:VERSION,state,meta});showModal("导出存档",`<p>复制下方文本，通过微信发送给朋友。对方导入后即可继续。</p><textarea class="save-text" id="saveText">${text}</textarea><button class="btn primary" id="copySave">复制存档文本</button>`);document.getElementById("copySave").onclick=()=>copyText(text,"存档文本已复制")}
-function importSave(){showModal("导入存档",`<p>粘贴完整存档文本。V1 与 V2 存档均可导入；旧版会自动补齐武学、装备机制和关系字段。</p><textarea class="save-text" id="importText" placeholder="在此粘贴……"></textarea><button class="btn primary" id="doImport">校验并导入</button>`);document.getElementById("doImport").onclick=()=>{try{const p=decodeSave(document.getElementById("importText").value);if(p.kind!=="汴河夜雨存档"||!p.version||p.version>VERSION)throw 0;reviveState(p.state);meta=Object.assign(meta,p.meta||{});saveMeta();autoSave();closeModal();showGame();toast("存档导入成功。","good")}catch(e){toast("存档文本无效或版本不兼容。","bad")}}}
+function importSave(){showModal("导入存档",`<p>粘贴完整存档文本。V1、V2 与 V3 存档均可导入；旧版会自动补齐九线世界、武学、装备机制和关系字段。</p><textarea class="save-text" id="importText" placeholder="在此粘贴……"></textarea><button class="btn primary" id="doImport">校验并导入</button>`);document.getElementById("doImport").onclick=()=>{try{const p=decodeSave(document.getElementById("importText").value);if(p.kind!=="汴河夜雨存档"||!p.version||p.version>VERSION)throw 0;reviveState(p.state);meta=Object.assign(meta,p.meta||{});meta.routes=meta.routes||[];saveMeta();autoSave();closeModal();showGame();toast("存档导入成功。","good")}catch(e){toast("存档文本无效或版本不兼容。","bad")}}}
 function copySummary(){
-  if(!state)return;const text=`【汴河夜雨·江湖战报】\n${state.player.name}「${state.player.title}」｜${ORIGINS[state.player.origin].name}·${SCHOOLS[state.player.school].name}\nLv.${state.player.level}｜${REALMS[state.player.realm]}｜${STORY[state.node]?.chapter||"终局"}\n侠义 ${state.player.stats.chivalry}｜恶名 ${state.player.stats.notoriety}｜财富 ${state.player.stats.wealth}\n战斗胜利 ${state.battleWins}｜副本 ${Object.values(state.dungeons).reduce((n,x)=>n+x.clears,0)}｜成就 ${state.achievements.length}\n近日履历：${state.history.slice(-3).map(x=>x.text).join("；")}\n非官方同人作品《汴河夜雨》`;
+  if(!state)return;const text=`【汴河夜雨·江湖战报】\n${state.player.name}「${state.player.title}」｜${ORIGINS[state.player.origin].name}·${SCHOOLS[state.player.school].name}\nLv.${state.player.level}｜${REALMS[state.player.realm]}｜${STORY[state.node]?.chapter||"终局"}\n${routeReading()}\n侠义 ${state.player.stats.chivalry}｜恶名 ${state.player.stats.notoriety}｜财富 ${state.player.stats.wealth}\n战斗胜利 ${state.battleWins}｜副本 ${Object.values(state.dungeons).reduce((n,x)=>n+x.clears,0)}｜成就 ${state.achievements.length}\n最近风闻：${state.routes.rumors.slice(-1).map(x=>x.text).join("；")||"江湖暂静"}\n近日履历：${state.history.slice(-3).map(x=>x.text).join("；")}\n非官方同人作品《汴河夜雨》`;
   copyText(text,"冒险摘要已复制，可粘贴到微信聊天。");
 }
 function copyText(text,msg){if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(()=>toast(msg,"good")).catch(()=>fallbackCopy(text,msg));else fallbackCopy(text,msg)}
 function fallbackCopy(text,msg){const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove();toast(msg,"good")}
 
 function showCreator(reset=false){
-  if(reset){state=null;creatorData={step:1,origin:null,school:null}}
+  if(reset){state=null;creatorData={step:1,origin:null,school:null,keepsake:null}}
   document.getElementById("landing").classList.add("hidden");document.getElementById("game").classList.add("hidden");document.getElementById("creator").classList.remove("hidden");renderCreator()
 }
 function renderCreator(){
-  const step=creatorData.step;document.getElementById("stepMark").textContent=["一 / 三","二 / 三","三 / 三"][step-1];document.getElementById("creatorTitle").textContent=["写下名姓","选择出身","择定流派"][step-1];
-  [1,2,3].forEach(i=>document.getElementById(`creatorStep${i}`).classList.toggle("hidden",i!==step));document.getElementById("creatorPrev").disabled=step===1;document.getElementById("creatorNext").textContent=step===3?"执笔开篇":"下一步";
+  const step=creatorData.step;document.getElementById("stepMark").textContent=["一 / 五","二 / 五","三 / 五","四 / 五","五 / 五"][step-1];document.getElementById("creatorTitle").textContent=["写下名姓","写下执念","选择出身","择定流派","携一件旧物"][step-1];
+  [1,2,3,4,5].forEach(i=>document.getElementById(`creatorStep${i}`).classList.toggle("hidden",i!==step));document.getElementById("creatorPrev").disabled=step===1;document.getElementById("creatorNext").textContent=step===5?"执笔开篇":"下一步";
   document.getElementById("originChoices").innerHTML=Object.entries(ORIGINS).map(([id,o])=>`<button class="choice-card ${creatorData.origin===id?"selected":""}" data-origin="${id}"><b>${o.name}</b><span>${o.desc}</span></button>`).join("");
   document.getElementById("schoolChoices").innerHTML=Object.entries(SCHOOLS).map(([id,s])=>`<button class="choice-card ${creatorData.school===id?"selected":""}" data-school="${id}"><b>${s.name}</b><span>${s.role}<br>${s.mechanic}</span></button>`).join("");
-  document.querySelectorAll("[data-origin]").forEach(b=>b.onclick=()=>{creatorData.origin=b.dataset.origin;renderCreator()});document.querySelectorAll("[data-school]").forEach(b=>b.onclick=()=>{creatorData.school=b.dataset.school;renderCreator()})
+  document.getElementById("keepsakeChoices").innerHTML=Object.entries(KEEPSAKES).map(([id,k])=>`<button class="choice-card ${creatorData.keepsake===id?"selected":""}" data-keepsake="${id}"><b>${k.name}</b><span>${k.desc}</span></button>`).join("");
+  document.querySelectorAll("[data-origin]").forEach(b=>b.onclick=()=>{creatorData.origin=b.dataset.origin;renderCreator()});document.querySelectorAll("[data-school]").forEach(b=>b.onclick=()=>{creatorData.school=b.dataset.school;renderCreator()});document.querySelectorAll("[data-keepsake]").forEach(b=>b.onclick=()=>{creatorData.keepsake=b.dataset.keepsake;renderCreator()})
 }
 function creatorNext(){
   if(creatorData.step===1){
     if(!document.getElementById("charName").value.trim()){toast("请先写下角色姓名。","bad");return}
     creatorData.step=2;renderCreator();return
   }
-  if(creatorData.step===2){if(!creatorData.origin){toast("请选择一种出身。","bad");return}creatorData.step=3;renderCreator();return}
-  if(!creatorData.school){toast("请选择一种战斗流派。","bad");return}
+  if(creatorData.step===2){if(!document.getElementById("charObsession").value.trim()){toast("请写下一项无法轻易放下的执念。","bad");return}creatorData.step=3;renderCreator();return}
+  if(creatorData.step===3){if(!creatorData.origin){toast("请选择一种出身。","bad");return}creatorData.step=4;renderCreator();return}
+  if(creatorData.step===4){if(!creatorData.school){toast("请选择一种战斗流派。","bad");return}creatorData.step=5;renderCreator();return}
+  if(!creatorData.keepsake){toast("请选择一件陪你入江湖的旧物。","bad");return}
   state=freshState();const g=document.getElementById("charGender").value;
   state.player.name=document.getElementById("charName").value.trim();state.player.gender=g==="自定义"?(document.getElementById("charCustomGender").value.trim()||"江湖中人"):g;
-  state.player.look=document.getElementById("charLook").value.trim()||"风尘仆仆，目光清亮";state.player.title=document.getElementById("charTitle").value.trim()||"听雨客";state.player.origin=creatorData.origin;state.player.school=creatorData.school;
-  applyOriginAndSchool();state.node=selectOpening();state.world.openingId=state.node;addHistory(`从异途开篇「${STORY[state.node].title}」踏入江湖。`);autoSave();showGame()
+  state.player.look=document.getElementById("charLook").value.trim()||"风尘仆仆，目光清亮";state.player.title=document.getElementById("charTitle").value.trim()||"听雨客";state.player.obsession=document.getElementById("charObsession").value.trim();state.player.secret=document.getElementById("charSecret").value.trim()||"曾经有一封信，你没有送到";state.player.origin=creatorData.origin;state.player.school=creatorData.school;state.player.keepsake=creatorData.keepsake;
+  applyOriginAndSchool();const keepsake=KEEPSAKES[creatorData.keepsake];addItem(keepsake.item,1);state.routes.tendencies[keepsake.tendency]=(state.routes.tendencies[keepsake.tendency]||0)+1;state.node=selectOpening();state.world.openingId=state.node;addHistory(`携「${keepsake.name}」从异途开篇「${STORY[state.node].title}」踏入江湖。`);autoSave();showGame()
 }
 function showGame(){
   document.getElementById("landing").classList.add("hidden");document.getElementById("creator").classList.add("hidden");document.getElementById("game").classList.remove("hidden");document.getElementById("sceneArea").innerHTML=`<section class="scene"><div class="chapter-kicker" id="chapterKicker"></div><h1 id="sceneTitle"></h1><div class="story-text" id="storyText"></div><div class="delta-log" id="deltaLog"></div></section><section class="choices" id="choices"></section>`;
@@ -1680,10 +1928,10 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 if(localStorage.getItem(SAVE_KEY))document.getElementById("continueBtn").classList.remove("hidden");
 applySettings();
 window.__BIANHE_TEST__={
-  VERSION,freshState,STORY,SCHOOLS,NPCS,DUNGEONS,ACHIEVEMENTS,ENDINGS,EQUIPMENT_DB,ITEMS,ENEMIES,OPENING_DEFS,SIDE_QUESTS,
-  conditionResult,reviveState,enterNode,startBattle,battleAction,equipItem,unequipItem,useItem,
+  VERSION,freshState,STORY,SCHOOLS,NPCS,DUNGEONS,ACHIEVEMENTS,ENDINGS,EQUIPMENT_DB,ITEMS,ENEMIES,OPENING_DEFS,SIDE_QUESTS,ROUTES,KEEPSAKES,
+  conditionResult,reviveState,enterNode,chooseOption,startBattle,battleAction,equipItem,unequipItem,useItem,
   completeDungeon,resolveEnding,applyEffects,fortAction,doBreakthrough,realmNeed,manualSave,manualLoad,
-  autoSave,loadAuto,unlockAchievement,learnSkill,toggleSkill,reforgeEq,socketEq,selectOpening,getState:()=>state,setState:x=>{state=x}
+  autoSave,loadAuto,unlockAchievement,learnSkill,toggleSkill,reforgeEq,socketEq,selectOpening,advanceWorld,evaluateRouteFormation,routeReading,getState:()=>state,setState:x=>{state=x}
 };
 })();
 </script>
